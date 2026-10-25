@@ -1,0 +1,2 @@
+# Privacy model
+Retain provider identity and operational contribution identifiers rather than full chat. Do not display viewer identities in Passport. Provider credentials belong encrypted at rest under an independent deployment secret. Disconnect stops provider access; account deletion must remove credentials, sessions and unnecessary identity links while preserving minimal campaign proof according to disclosed retention. Live deletion acceptance is not claimed before implementation and testing.

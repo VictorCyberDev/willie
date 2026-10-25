@@ -1,0 +1,2 @@
+# Willie engineering rules
+Read PRODUCT_CONSTITUTION.md. Preserve single custody and explicit receive consent. Never label fixtures LIVE_ACCEPTED. Strict TypeScript; no broad any. Do not weaken tests. Review each milestone independently with subagents. Primary integration branch integration/willie-m0-m16. Required checks pnpm lint, typecheck, test, test:property, test:integration, test:contracts, test:e2e, test:m9, build. Database tests require isolated TEST_DATABASE_URL. No owner production DB tests. Never log tokens. Add evidence honestly.
