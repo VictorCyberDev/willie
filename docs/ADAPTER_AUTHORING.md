@@ -1,0 +1,2 @@
+# Adapter authoring
+Import only public SDK types. Validate bounded config and event payloads. Emit minimal normalized records. Never mutate custody, execute remote code, log secrets or store full chat/donor PII. Host owns durable dedupe, outbox, authorization, scheduling/retry and cursor persistence. Failed emit must not advance checkpoint. Disconnect clears credentials/context. Write lifecycle, malformed input, downtime, duplicate and revocation tests. Run pnpm adapter:test and pnpm test:contracts.

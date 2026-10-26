@@ -1,0 +1,2 @@
+# Adapter security
+Authenticate raw webhook bytes and timestamps before JSON authority. Twitch HMAC signs ID+timestamp+body. Kick RSA signs ID.timestamp.body, using rotatable official public key. Generic HMAC signs timestamp.body. Signatures do not replace durable event dedupe. Bind source identity to active campaign membership; paid events never grant custody. Encrypt credentials under deployment secret; tokens never in OBS/logs/receipts. Fixed official HTTPS origins prevent arbitrary-base-URL SSRF. No adapter fixture proves live connection.

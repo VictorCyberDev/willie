@@ -1,0 +1,2 @@
+# Shot list
+Capture two streams; sleeping overlay; chat contributions; destination readiness; Arm; native Twitch raid if actually accepted; departure; arrival;750ms Hold to Receive; unchanged progress; Passport ring; new community contribution; unrelated raid refusal; duplicate/wrong-target/evidence-gap Attack Lab; receipt hashes; architecture; Codex failing test/repair/passing evidence; closing title. Follow VIDEO_SCRIPT.md timings. Total must remain below3:00. Required finished video is an external recording asset until actually captured and uploaded.
