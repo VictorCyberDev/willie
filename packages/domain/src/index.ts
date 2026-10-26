@@ -544,10 +544,22 @@ export function replayEvents(initial: State, events: Event[]): State {
     else if(e.type==='MEMBER_JOINED')s=joinMember(s,String(p.member),e.at,String(p.platform),p.profile as MemberProfile|undefined);
     else if(e.type==='MEMBER_LEFT')s=leaveMember(s,String(p.member),e.at);
     else if(['MEMBER_READY','MEMBER_UNREADY','CAMPAIGN_UPDATED','SHARED_CHAT_BEGIN','SHARED_CHAT_UPDATE','SHARED_CHAT_END','TWITCH_POWER_UP','HYPE_TRAIN_BEGIN','HYPE_TRAIN_PROGRESS','HYPE_TRAIN_END'].includes(e.type))s=recordOperationalEvent(s,e.type,e.at,p);
+    else if(e.type==='HANDOFF_EXPIRED')s=expireHandoff(s,e.at);
+    else if(e.type==='HANDOFF_DECLINED')s=declineHandoff(s,String(p.destination),e.at);
     else if (e.type === 'HANDOFF_ABORTED') s = abort(s, s.custodian, e.at);
     else if (e.type === 'HANDOFF_PAUSED') s = gap(s, e.at);
     else if (e.type === 'CAMPAIGN_PAUSED') s = pause(s, e.at);
     else if (e.type === 'CAMPAIGN_RESUMED') s = resume(s, e.at);
   }
   return s;
+}
+
+export function expireHandoff(state:State,now:number):State{
+ finiteTime(now);const h=state.handoff;if(!h||['COMMITTED','ABORTED'].includes(h.status)||now<h.expiresAt)return state;
+ const s=copy(state);s.handoff!.status='ABORTED';event(s,'HANDOFF_EXPIRED',now);return s;
+}
+export function declineHandoff(state:State,destination:string,now:number):State{
+ finiteTime(now);requireRule(state.handoff?.destination===destination&&state.members.includes(destination),'UNAUTHORIZED_DESTINATION');
+ requireRule(!['COMMITTED','ABORTED'].includes(state.handoff!.status),'INVALID_STATE');const expired=expireHandoff(state,now);if(expired!==state)return expired;
+ const s=copy(state);s.handoff!.status='ABORTED';event(s,'HANDOFF_DECLINED',now,{destination});return s;
 }
