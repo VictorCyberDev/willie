@@ -20,6 +20,7 @@ export interface Handoff {
     'TWITCH_NATIVE_RAID' | 'DUAL_CONSENT' | 'SIMULATED_JUDGE_REPLAY';
 }
 export interface Stamp {
+ custodianPlatform?:string;custodianPlatformUserId?:string;custodianDisplayName?:string;contributionCount?:number;communityAccent?:string;
   stampId: string;
   campaignId: string;
   willieId: string;
@@ -61,7 +62,12 @@ export interface Event {
   at: number;
   payload: Record<string, unknown>;
 }
+export interface MemberProfile{platform:string;platformUserId:string;displayName:string;communityAccent?:string}
+export interface ContributionPolicy{id:string;version:number;contributionRules:{command:string;weight:number}[];fairnessPolicy:{fullWeightUnique:number;diminishingUntil:number;diminishingMultiplier:number;tailMultiplier:number;cooldownMs:number}}
 export interface State {
+ template?:ContributionPolicy;
+ memberPlatforms?:Record<string,string>;
+ memberProfiles?:Record<string,MemberProfile>;
   campaignId: string;
   willieId: string;
   version: number;
@@ -173,6 +179,8 @@ export function hash(s: State): string {
   return sha256(
     canonical({
       campaignId: s.campaignId,
+      template:s.template??null,
+      memberPlatforms:s.memberPlatforms??null,
       willieId: s.willieId,
       version: s.version,
       custodian: s.custodian,
@@ -181,6 +189,7 @@ export function hash(s: State): string {
     }),
   );
 }
+function finiteTime(now:number):void { requireRule(Number.isFinite(now)&&now>=0,'INVALID_TIME'); }
 function copy(s: State): State {
   return structuredClone(s);
 }
@@ -196,6 +205,13 @@ function event(
     at,
     payload,
   });
+}
+function validateProfile(p:MemberProfile):void{requireRule(['twitch','youtube','kick','simulated'].includes(p.platform),'INVALID_PLATFORM');requireRule(p.platformUserId.length>0&&p.platformUserId.length<=300&&p.displayName.length>0&&p.displayName.length<=200,'INVALID_MEMBER_PROFILE');requireRule(!p.communityAccent||/^#[0-9a-f]{6}$/i.test(p.communityAccent),'INVALID_ACCENT');}
+export function initializeCampaign(input:{campaignId:string;willieId:string;custodianId:string;profile:MemberProfile;now:number;name?:string}):State{
+ finiteTime(input.now);requireRule(Boolean(input.campaignId&&input.willieId&&input.custodianId),'INVALID_IDENTITY');validateProfile(input.profile);
+ const p=structuredClone(input.profile),s:State={campaignId:input.campaignId,willieId:input.willieId,version:1,custodian:input.custodianId,progress:0,members:[input.custodianId],paused:false,handoff:null,passport:[],receipts:[],events:[],processed:[],contributors:[],commands:{},memberPlatforms:{[input.custodianId]:p.platform},memberProfiles:{[input.custodianId]:p}};
+ s.passport.push({stampId:input.campaignId+':initial',campaignId:s.campaignId,willieId:s.willieId,handoffId:'initial',custodian:s.custodian,custodianPlatform:p.platform,custodianPlatformUserId:p.platformUserId,custodianDisplayName:p.displayName,communityAccent:p.communityAccent??'#d0d4c5',contributionCount:0,receivedAt:input.now,versionReceived:1,progressReceived:0});
+ event(s,'CAMPAIGN_CREATED',input.now,{name:input.name??'Wake Willie'});event(s,'WILLIE_CREATED',input.now);return s;
 }
 export function createDemo(): State {
   const s: State = {
@@ -237,6 +253,8 @@ export function prepare(
   ttl = 120000,
   evidenceClass: Handoff['evidenceClass'] = 'SIMULATED_JUDGE_REPLAY',
 ): State {
+  finiteTime(now);
+  requireRule(Number.isSafeInteger(version)&&version>0,'STALE_VERSION');
   requireRule(!state.paused, 'CAMPAIGN_PAUSED');
   requireRule(state.custodian === source, 'UNAUTHORIZED_SOURCE');
   requireRule(
@@ -273,6 +291,8 @@ export function evidence(
   occurredAt: number,
   now: number,
 ): State {
+  finiteTime(now);finiteTime(occurredAt);
+  requireRule(id.length>0,'INVALID_EVENT_ID');
   if (state.processed.includes(id)) return state;
   const s = copy(state);
   s.processed.push(id);
@@ -314,6 +334,7 @@ export function accept(
   version: number,
   now: number,
 ): State {
+  finiteTime(now);requireRule(Number.isSafeInteger(version)&&version>0,'STALE_VERSION');
   const h = state.handoff;
   requireRule(h, 'NO_HANDOFF');
   requireRule(!state.paused, 'CAMPAIGN_PAUSED');
@@ -330,6 +351,7 @@ export function accept(
     'STALE_VERSION',
   );
   requireRule(now < h.expiresAt, 'HANDOFF_EXPIRED');
+  requireRule(now>=h.preparedAt&&h.verifiedAt!==undefined&&now>=h.verifiedAt,'INVALID_TIME');
   requireRule(h.evidenceId && h.verifiedAt !== undefined, 'EVIDENCE_REQUIRED');
   const s = copy(state),
     t = s.handoff!;
@@ -347,6 +369,10 @@ export function accept(
     willieId: s.willieId,
     handoffId: t.id,
     custodian: destination,
+    custodianPlatform:s.memberPlatforms?.[destination]??'simulated',
+    custodianPlatformUserId:s.memberProfiles?.[destination]?.platformUserId??destination,
+    custodianDisplayName:s.memberProfiles?.[destination]?.displayName??destination,
+    contributionCount:0,communityAccent:'#d0d4c5',
     receivedAt: now,
     versionReceived: s.version,
     progressReceived: s.progress,
@@ -394,6 +420,7 @@ export function accept(
   return s;
 }
 export function abort(state: State, source: string, now: number): State {
+ finiteTime(now);
   requireRule(source === state.custodian, 'UNAUTHORIZED_SOURCE');
   requireRule(
     state.handoff && !['COMMITTED', 'ABORTED'].includes(state.handoff.status),
@@ -405,6 +432,7 @@ export function abort(state: State, source: string, now: number): State {
   return s;
 }
 export function gap(state: State, now: number): State {
+ finiteTime(now);
   const s = copy(state);
   if (
     s.handoff &&
@@ -418,70 +446,41 @@ export function gap(state: State, now: number): State {
   return s;
 }
 export function pause(state: State, now: number): State {
+ finiteTime(now);
   const s = gap(state, now);
   s.paused = true;
   event(s, 'CAMPAIGN_PAUSED', now);
   return s;
 }
 export function resume(state: State, now: number): State {
+ finiteTime(now);
   const s = copy(state);
   s.paused = false;
   event(s, 'CAMPAIGN_RESUMED', now);
   return s;
 }
-export function contribute(
-  state: State,
-  id: string,
-  user: string,
-  command: string,
-  now: number,
-): State {
-  if (state.processed.includes(id)) return state;
-  const s = copy(state);
-  s.processed.push(id);
-  event(s, 'CONTRIBUTION_RECEIVED', now, {
-    id,
-    user,
-    command: ['!charge', '!scan', '!shield', '!forge'].includes(command)
-      ? command
-      : '',
-  });
-  if (
-    s.paused ||
-    !['!charge', '!scan', '!shield', '!forge'].includes(command)
-  ) {
-    event(s, 'CONTRIBUTION_REJECTED', now, { reason: 'INVALID_OR_PAUSED' });
-    return s;
-  }
-  const key = s.custodian + ':' + user;
-  const prior = s.commands[key];
-  if (prior !== undefined && now - prior < 30000) {
-    event(s, 'CONTRIBUTION_REJECTED', now, { reason: 'COOLDOWN' });
-    return s;
-  }
-  s.commands[key] = now;
-  if (s.contributors.includes(key)) {
-    event(s, 'CONTRIBUTION_REJECTED', now, { reason: 'UNIQUE_LIMIT' });
-    return s;
-  }
-  const n = s.contributors.filter((k) =>
-    k.startsWith(s.custodian + ':'),
-  ).length;
-  const weight = n < 20 ? 2 : n < 100 ? 0.25 : 0.025;
-  const before = s.progress;
-  s.progress = Math.min(100, Math.round((s.progress + weight) * 1000) / 1000);
-  s.contributors.push(key);
-  event(s, 'CONTRIBUTION_ACCEPTED', now, { id, weight });
-  for (const threshold of [25, 50, 75, 100])
-    if (before < threshold && s.progress >= threshold)
-      event(
-        s,
-        threshold === 100 ? 'CAMPAIGN_COMPLETED' : 'MILESTONE_REACHED',
-        now,
-        { threshold },
-      );
-  return s;
+export function contribute(state:State,id:string,user:string,command:string,now:number,options:{community?:string;kind?:'chat'|'paid'}={}):State{
+ finiteTime(now);requireRule(id.length>0&&user.length>0,'INVALID_EVENT_ID');if(state.processed.includes(id))return state;
+ const s=copy(state),community=options.community??s.custodian,kind=options.kind??'chat';s.processed.push(id);
+ const allowed=['!charge','!scan','!shield','!forge'].includes(command);
+ event(s,'CONTRIBUTION_RECEIVED',now,{id,user,command:allowed?command:'',community,kind});
+ const rule=s.template?.contributionRules.find(r=>r.command===command);
+ if(s.paused||!allowed||!s.members.includes(community)||(s.template&&!rule)){event(s,'CONTRIBUTION_REJECTED',now,{reason:'INVALID_OR_PAUSED'});return s;}
+ const key=JSON.stringify([community,user,kind]),prior=s.commands[key],f=s.template?.fairnessPolicy??{fullWeightUnique:20,diminishingUntil:100,diminishingMultiplier:.125,tailMultiplier:.0125,cooldownMs:30000};
+ if(prior!==undefined&&now-prior<f.cooldownMs){event(s,'CONTRIBUTION_REJECTED',now,{reason:'COOLDOWN'});return s;}
+ s.commands[key]=now;if(s.contributors.includes(key)){event(s,'CONTRIBUTION_REJECTED',now,{reason:'UNIQUE_LIMIT'});return s;}
+ const n=s.contributors.filter(k=>{try{const p=JSON.parse(k)as string[];return p[0]===community&&p[2]===kind;}catch{return false;}}).length;
+ if(kind==='paid'&&n>=40){event(s,'CONTRIBUTION_REJECTED',now,{reason:'PAID_COMMUNITY_CAP'});return s;}
+ const weight=kind==='paid'?.25:(rule?.weight??2)*(n<f.fullWeightUnique?1:n<f.diminishingUntil?f.diminishingMultiplier:f.tailMultiplier),before=s.progress;
+ requireRule(Number.isFinite(weight)&&weight>=0&&weight<=5,'INVALID_CONTRIBUTION_POLICY');
+ s.progress=Math.min(100,Math.round((s.progress+weight)*1000)/1000);s.contributors.push(key);const stamp=s.passport.at(-1);if(stamp)stamp.contributionCount=(stamp.contributionCount??0)+1;
+ event(s,'CONTRIBUTION_ACCEPTED',now,{id,weight,community,kind});
+ for(const threshold of[25,50,75,100])if(before<threshold&&s.progress>=threshold)event(s,threshold===100?'CAMPAIGN_COMPLETED':'MILESTONE_REACHED',now,{threshold});
+ return s;
 }
+export function joinMember(state:State,member:string,now:number,platform='twitch',profile?:MemberProfile):State{finiteTime(now);if(state.members.includes(member))return state;const s=copy(state);s.members.push(member);if(profile)validateProfile(profile);s.memberPlatforms={...s.memberPlatforms,[member]:profile?.platform??platform};if(profile)s.memberProfiles={...s.memberProfiles,[member]:structuredClone(profile)};event(s,'MEMBER_JOINED',now,{member,platform,profile});return s;}
+export function leaveMember(state:State,member:string,now:number):State{finiteTime(now);requireRule(member!==state.custodian,'CUSTODIAN_CANNOT_LEAVE');const s=copy(state);s.members=s.members.filter(x=>x!==member);if(s.handoff&&s.handoff.destination===member&&!['COMMITTED','ABORTED'].includes(s.handoff.status))s.handoff.status='ABORTED';event(s,'MEMBER_LEFT',now,{member});return s;}
+export function recordOperationalEvent(state:State,type:string,now:number,payload:Record<string,unknown>):State{finiteTime(now);requireRule(['MEMBER_READY','MEMBER_UNREADY','CAMPAIGN_UPDATED','SHARED_CHAT_BEGIN','SHARED_CHAT_UPDATE','SHARED_CHAT_END','TWITCH_POWER_UP','HYPE_TRAIN_BEGIN','HYPE_TRAIN_PROGRESS','HYPE_TRAIN_END'].includes(type),'INVALID_EVENT_TYPE');const s=copy(state);if(type==='CAMPAIGN_UPDATED'&&payload.action==='MEMBER_PLATFORM_SELECTED'&&typeof payload.member==='string'&&typeof payload.platform==='string'){requireRule(s.members.includes(payload.member),'INVALID_MEMBERSHIP');s.memberPlatforms={...s.memberPlatforms,[payload.member]:payload.platform};if(payload.profile){const profile=payload.profile as MemberProfile;validateProfile(profile);requireRule(profile.platform===payload.platform,'INVALID_MEMBER_PROFILE');s.memberProfiles={...s.memberProfiles,[payload.member]:structuredClone(profile)};}}event(s,type,now,payload);return s;}
 export type ReplayAction =
   | {
       kind: 'prepare';
@@ -541,7 +540,10 @@ export function replayEvents(initial: State, events: Event[]): State {
     else if (e.type === 'HANDOFF_COMMITTED')
       s = accept(s, String(p.destination), Number(p.version) - 1, e.at);
     else if (e.type === 'CONTRIBUTION_RECEIVED')
-      s = contribute(s, String(p.id), String(p.user), String(p.command), e.at);
+      s = contribute(s,String(p.id),String(p.user),String(p.command),e.at,{community:typeof p.community==='string'?p.community:undefined,kind:p.kind==='paid'?'paid':'chat'});
+    else if(e.type==='MEMBER_JOINED')s=joinMember(s,String(p.member),e.at,String(p.platform),p.profile as MemberProfile|undefined);
+    else if(e.type==='MEMBER_LEFT')s=leaveMember(s,String(p.member),e.at);
+    else if(['MEMBER_READY','MEMBER_UNREADY','CAMPAIGN_UPDATED','SHARED_CHAT_BEGIN','SHARED_CHAT_UPDATE','SHARED_CHAT_END','TWITCH_POWER_UP','HYPE_TRAIN_BEGIN','HYPE_TRAIN_PROGRESS','HYPE_TRAIN_END'].includes(e.type))s=recordOperationalEvent(s,e.type,e.at,p);
     else if (e.type === 'HANDOFF_ABORTED') s = abort(s, s.custodian, e.at);
     else if (e.type === 'HANDOFF_PAUSED') s = gap(s, e.at);
     else if (e.type === 'CAMPAIGN_PAUSED') s = pause(s, e.at);

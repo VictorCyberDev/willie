@@ -1,0 +1,17 @@
+import {beforeAll,afterAll,it,expect} from 'vitest';import {randomUUID} from 'node:crypto';import {createPool,migrate,Repository,dispatchOutbox} from '../packages/db/src/index';import {createDemo,initializeCampaign,prepare,evidence,accept} from '../packages/domain/src/index';
+const url=process.env.TEST_DATABASE_URL;
+if(!url)throw new Error('TEST_DATABASE_URL must point to an isolated disposable Willie test database; integration tests never use DATABASE_URL');
+const pool=createPool(url),repo=new Repository(pool);const campaignId='test-'+randomUUID();
+beforeAll(async()=>{await migrate(pool);},30000);afterAll(async()=>{await pool.end();});
+it('fresh migration replay is idempotent',async()=>{await migrate(pool);const r=await pool.query('SELECT version FROM schema_migrations');expect(r.rows).toContainEqual({version:1});});
+it('durably commits exactly one racing receive and restores after pool restart',async()=>{const s=createDemo();s.campaignId=campaignId;await repo.create(s);await repo.mutate(campaignId,1,x=>prepare(x,'maya','victor',1,1000));await repo.mutate(campaignId,1,x=>evidence(x,'raid-'+campaignId,'maya','victor',1100,1200));const results=await Promise.allSettled([repo.mutate(campaignId,1,x=>accept(x,'victor',1,1300)),repo.mutate(campaignId,1,x=>accept(x,'victor',1,1300))]);expect(results.filter(x=>x.status==='fulfilled')).toHaveLength(1);expect(results.filter(x=>x.status==='rejected')).toHaveLength(1);const separate=createPool(url!);try{const state=await new Repository(separate).get(campaignId);expect(state?.custodian).toBe('victor');expect(state?.version).toBe(2);expect(state?.receipts).toHaveLength(1);expect(state?.passport).toHaveLength(2);}finally{await separate.end();}const proof=await pool.query('SELECT count(*)::int AS count FROM receipts WHERE campaign_id=$1',[campaignId]);expect(proof.rows[0].count).toBe(1);});
+it('event envelopes deduplicate and historical ledger cannot be rewritten',async()=>{expect(await repo.recordEnvelope('twitch',campaignId,{})).toBe(true);expect(await repo.recordEnvelope('twitch',campaignId,{})).toBe(false);await expect(pool.query('UPDATE domain_events SET event_type=$2 WHERE campaign_id=$1',[campaignId,'CORRUPTED'])).rejects.toThrow('append-only');});
+it('callback failure rolls back every record',async()=>{const before=await repo.get(campaignId);await expect(repo.mutate(campaignId,2,()=>{throw new Error('crash');})).rejects.toThrow('crash');expect(await repo.get(campaignId)).toEqual(before);});
+it('outbox retries after delivery failure with a single-connection pool',async()=>{
+ const id='outbox-'+randomUUID(),s=initializeCampaign({campaignId:id,willieId:id,custodianId:id,profile:{platform:'twitch',platformUserId:id,displayName:'Outbox fixture'},now:Date.now(),name:'Outbox fixture'});await repo.create(s);
+ const single=createPool(url!);single.options.max=1;
+ try{await expect(dispatchOutbox(single,async()=>{throw new Error('delivery unavailable');},{campaignId:id})).rejects.toThrow('delivery unavailable');
+ const pending=await single.query('SELECT attempts,delivered_at FROM outbox_events WHERE campaign_id=$1',[id]);expect(pending.rows.length).toBeGreaterThan(0);expect(pending.rows.every(r=>r.attempts===1&&r.delivered_at===null)).toBe(true);
+ let delivered=0;expect(await dispatchOutbox(single,async state=>{expect(state.campaignId).toBe(id);delivered++;},{campaignId:id})).toBeGreaterThan(0);expect(delivered).toBe(1);expect(await dispatchOutbox(single,async()=>{throw new Error('duplicate delivery');},{campaignId:id})).toBe(0);
+ }finally{await single.end();}
+});
