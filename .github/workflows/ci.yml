@@ -19,7 +19,8 @@ jobs:
         with: {node-version: 24, cache: pnpm}
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm lint && pnpm typecheck && pnpm test && pnpm test:property && pnpm test:integration && pnpm test:contracts && pnpm build && pnpm test:e2e && pnpm test:m9 && pnpm docker:build
+      - run: pnpm migrate && pnpm seed
+      - run: pnpm lint && pnpm typecheck && pnpm test && pnpm test:property && pnpm test:integration && pnpm test:contracts && pnpm build && pnpm test:e2e && pnpm test:m9 && pnpm test:failure && pnpm docker:build
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: browser-evidence, path: test-results}

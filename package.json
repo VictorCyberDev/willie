@@ -20,7 +20,8 @@
     "migrate": "node --env-file-if-exists=.env --import tsx packages/db/src/cli.ts",
     "seed": "node --env-file-if-exists=.env --import tsx scripts/seed.ts",
     "docker:build": "docker build -t willie:local .",
-    "start": "node --env-file-if-exists=.env dist/server/apps/server/src/index.js"
+    "start": "node --env-file-if-exists=.env dist/server/apps/server/src/index.js",
+    "test:failure": "node --import tsx scripts/failure-acceptance.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
