@@ -1,0 +1,31 @@
+import {createHmac,randomBytes,timingSafeEqual} from 'node:crypto';
+import {event,record,requiredString,type NormalizedProviderEvent} from '../../sdk/src/index.js';
+export function equalState(actual:string,expected:string):boolean { const a=Buffer.from(actual),b=Buffer.from(expected);return a.length===b.length&&a.length>=32&&timingSafeEqual(a,b) }
+export function makeOAuthState():string{return randomBytes(32).toString('hex')}
+export function verifyEventSub(raw:string,headers:Record<string,string|undefined>,secret:string,now:number):boolean {
+ const id=headers['twitch-eventsub-message-id'],time=headers['twitch-eventsub-message-timestamp'],signature=headers['twitch-eventsub-message-signature'];
+ if(!id||!time||!signature||secret.length<10)return false;
+ const timestamp=Date.parse(time);if(!Number.isFinite(timestamp)||Math.abs(now-timestamp)>600000)return false;
+ const expected='sha256='+createHmac('sha256',secret).update(id+time+raw).digest('hex');const a=Buffer.from(signature),b=Buffer.from(expected);return a.length===b.length&&timingSafeEqual(a,b);
+}
+export interface TwitchOAuthConfig {clientId:string;clientSecret:string;redirectUri:string}
+export interface TokenSet {access_token:string;refresh_token:string;expires_in:number;scope?:string[];token_type:string}
+async function token(fetcher:typeof fetch,params:URLSearchParams):Promise<TokenSet>{const r=await fetcher('https://id.twitch.tv/oauth2/token',{method:'POST',headers:{'content-type':'application/x-www-form-urlencoded'},body:params});if(!r.ok)throw new Error('Twitch token request failed ('+r.status+')');const data=record(await r.json());if(!Number.isSafeInteger(Number(data.expires_in))||Number(data.expires_in)<=0)throw Error('Invalid token expiry');return {access_token:requiredString(data.access_token,'access token'),refresh_token:requiredString(data.refresh_token,'refresh token'),expires_in:Number(data.expires_in),token_type:requiredString(data.token_type,'token type'),scope:Array.isArray(data.scope)?data.scope.filter((s):s is string=>typeof s==='string'):[]}}
+export function exchangeTwitchCode(fetcher:typeof fetch,config:TwitchOAuthConfig,code:string):Promise<TokenSet>{return token(fetcher,new URLSearchParams({client_id:config.clientId,client_secret:config.clientSecret,redirect_uri:config.redirectUri,grant_type:'authorization_code',code}))}
+export function refreshTwitchToken(fetcher:typeof fetch,config:TwitchOAuthConfig,refreshToken:string):Promise<TokenSet>{return token(fetcher,new URLSearchParams({client_id:config.clientId,client_secret:config.clientSecret,grant_type:'refresh_token',refresh_token:refreshToken}))}
+export async function validateTwitchToken(fetcher:typeof fetch,accessToken:string,expectedClientId:string):Promise<{userId:string;scopes:string[];expiresIn:number}>{const response=await fetcher('https://id.twitch.tv/oauth2/validate',{headers:{Authorization:'OAuth '+accessToken}});if(!response.ok)throw new Error('Twitch authorization revoked');const d=record(await response.json());if(d.client_id!==expectedClientId)throw new Error('Twitch token client mismatch');return{userId:requiredString(d.user_id,'user id'),scopes:Array.isArray(d.scopes)?d.scopes.filter((s):s is string=>typeof s==='string'):[],expiresIn:Number(d.expires_in)}}
+export function normalizeTwitch(input:unknown,messageId:string,timestamp:string,now:number):NormalizedProviderEvent|null {
+ const envelope=record(input),subscription=record(envelope.subscription),e=record(envelope.event);const type=requiredString(subscription.type,'subscription type');
+ if(type==='channel.raid')return event('twitch',messageId,'TRANSITION_EVIDENCE',requiredString(e.from_broadcaster_user_id,'raid source'),timestamp,now,{evidenceClass:'TWITCH_NATIVE_RAID'},requiredString(e.to_broadcaster_user_id,'raid destination'));
+ if(type==='channel.chat.message') {const message=record(e.message);const text=requiredString(message.text,'chat text').trim().toLowerCase();if(!['!charge','!scan','!shield','!forge'].includes(text))return null;const semanticId=typeof e.source_message_id==='string'?e.source_message_id:requiredString(e.message_id,'chat message id');return event('twitch',semanticId,'CHAT_CONTRIBUTION',typeof e.source_broadcaster_user_id==='string'?e.source_broadcaster_user_id:requiredString(e.broadcaster_user_id,'broadcaster'),timestamp,now,{command:text,contributorId:requiredString(e.chatter_user_id,'chatter')});}
+ if(['channel.shared_chat.begin','channel.shared_chat.update','channel.shared_chat.end'].includes(type))return event('twitch',messageId,type.replace('channel.','').toUpperCase().replaceAll('.','_'),requiredString(e.broadcaster_user_id,'broadcaster'),timestamp,now,{sessionId:e.session_id,hostBroadcasterId:e.host_broadcaster_user_id,participants:e.participants});
+ if(type==='channel.custom_power_up_redemption.add')return event('twitch',messageId,'TWITCH_POWER_UP',requiredString(e.broadcaster_user_id,'broadcaster'),timestamp,now,{contributorId:e.user_id,powerUp:e.power_up});
+ if(['channel.hype_train.begin','channel.hype_train.progress','channel.hype_train.end'].includes(type))return event('twitch',messageId,type.replace('channel.','').toUpperCase().replaceAll('.','_'),requiredString(e.broadcaster_user_id,'broadcaster'),timestamp,now,{trainId:e.id,level:e.level,total:e.total,isSharedTrain:e.is_shared_train,sharedTrainParticipants:e.shared_train_participants});
+ return null;
+}
+export const twitchSubscriptions = [
+ {type:'channel.raid',version:'1',scope:null},{type:'channel.chat.message',version:'1',scope:'user:read:chat'},
+ {type:'channel.shared_chat.begin',version:'1',scope:null},{type:'channel.shared_chat.update',version:'1',scope:null},{type:'channel.shared_chat.end',version:'1',scope:null},
+ {type:'channel.custom_power_up_redemption.add',version:'1',scope:'bits:read'},{type:'channel.hype_train.begin',version:'2',scope:'channel:read:hype_train'},{type:'channel.hype_train.progress',version:'2',scope:'channel:read:hype_train'},{type:'channel.hype_train.end',version:'2',scope:'channel:read:hype_train'}
+] as const;
+export function eventSubContinuity(messageType:string):'PRESERVED'|'GAP'|'NORMAL' {return messageType==='session_reconnect'?'PRESERVED':messageType==='hard_loss'?'GAP':'NORMAL'}

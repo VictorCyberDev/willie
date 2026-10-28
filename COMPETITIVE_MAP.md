@@ -1,0 +1,2 @@
+# Competitive boundaries
+Twitch provides chat, raids, Shared Chat, Bits and Hype Train. Overlay tools provide presentation and interaction. Persistent games provide shared progression. Willie combines explicit preparation, matching evidence, destination consent, versioned custody and durable proof for one shared object. This is a product positioning comparison, not an exhaustive competitive or patent search.

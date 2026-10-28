@@ -1,0 +1,2 @@
+import { defineConfig } from '@playwright/test';
+export default defineConfig({testDir:'tests',testMatch:'browser*.spec.ts',use:{baseURL:'http://127.0.0.1:3000',trace:'retain-on-failure'},webServer:{command:'pnpm dev',url:'http://127.0.0.1:3000/health',reuseExistingServer:!process.env.CI,env:{NODE_ENV:'test',DATABASE_URL:process.env.TEST_DATABASE_URL ?? '',SESSION_SECRET:'test-session-secret-only-32-bytes-minimum',TOKEN_ENCRYPTION_KEY:'1111111111111111111111111111111111111111111111111111111111111111'}},reporter:[['list'],['html',{open:'never'}]]});

@@ -1,0 +1,2 @@
+# Willie brand
+One live thing. Many communities. A six-segment short asymmetric capsule, luminous core and permanent rings. No face or limbs. Graphite #11110f, warm bone #f1eadd, signal orange-red #ff5934, cool neutral verification. Sans for human language; mono for protocol labels. Creator accents remain thin route lines or rings. Primary action: Pass Willie. Closing: A raid shouldn't reset the story.

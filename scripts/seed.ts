@@ -1,0 +1,2 @@
+import {createPool,Repository} from '../packages/db/src/index.js';import {createDemo} from '../packages/domain/src/index.js';
+const url=process.env.DATABASE_URL;if(!url)throw new Error('DATABASE_URL is required');const pool=createPool(url);try{const repo=new Repository(pool);if(!await repo.get('wake-willie-demo'))await repo.create(createDemo());console.log('SIMULATED development seed ready');}finally{await pool.end();}

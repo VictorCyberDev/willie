@@ -1,0 +1,2 @@
+# Judge path
+Innovation: landing and prepared/evidenced/consented Handoff. Impact: bounded community contribution and cross-community continuation. Technology: Receipt hashes, domain tests, Postgres transaction and evidence-gap attack. Design: artifact silhouette, quiet console,750ms receive, Passport rings, reduced motion. Public /judge needs no external account and prominently identifies simulation.

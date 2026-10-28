@@ -1,0 +1,2 @@
+import {it,expect}from'vitest';import{adapterWorkerCapacity}from'../apps/server/src/provider-host';
+it('worker bounds reserve effect connections and one operational connection',()=>{for(let max=3;max<=100;max++){const workers=adapterWorkerCapacity(max);expect(workers).toBeGreaterThan(0);expect(workers).toBeLessThanOrEqual(2);expect(workers*2+1).toBeLessThanOrEqual(max);}for(const max of[0,1,2,2.5,NaN])expect(()=>adapterWorkerCapacity(max)).toThrow('at least three');});
