@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:property": "vitest run tests/domain.property.test.ts",
-    "test:integration": "vitest run tests/db.integration.test.ts",
+    "test:integration": "vitest run tests/*.integration.test.ts",
     "test:contracts": "vitest run tests/contracts.test.ts",
     "test:e2e": "playwright test",
     "test:m9": "vitest run tests/m9.test.ts && playwright test",
