@@ -1,3 +1,4 @@
+import {playWillieSound,type WillieSound}from'./Sound';
 const SimulatedBrandConsole=React.lazy(()=>import('./SimulatedBrandConsole'));
 import Overlay from './Overlay';
 const LiveConsole=React.lazy(()=>import('./LiveConsole'));
@@ -11,7 +12,7 @@ const[state,setState]=useState<State>(createDemo),[message,setMessage]=useState(
 const timer=useRef<ReturnType<typeof setInterval>|null>(null),sequence=useRef(0);const h=state.handoff,committed=h?.status==='COMMITTED',awaiting=h?.status==='AWAITING_ACCEPTANCE',armed=h?.status==='PREPARED',paused=h?.status==='PAUSED';
 const visual=paused?'PAUSED':committed?'RECEIVED':awaiting?'AWAITING_RECEIVE':armed?'ARMED':state.progress>=100?'COMPLETED':state.progress>0?'ACTIVE':'SLEEPING';
 useEffect(()=>()=>{if(timer.current)clearInterval(timer.current)},[]);
-function sound(kind:string){if(muted)return;const audio=new AudioContext(),gain=audio.createGain();gain.gain.setValueAtTime(.08,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.5);gain.connect(audio.destination);[0,.12].forEach((offset,i)=>{const o=audio.createOscillator();o.frequency.value=kind==='receive'?(i?660:440):(i?220:110);o.connect(gain);o.start(audio.currentTime+offset);o.stop(audio.currentTime+.5)});setTimeout(()=>void audio.close(),700)}
+function sound(kind:WillieSound){if(!muted)playWillieSound(kind)}
 function action(fn:()=>State,text:string){try{setState(fn());setMessage(text)}catch(error){setMessage(error instanceof Error?error.message:String(error))}}
 function charge(){action(()=>contribute(state,'demo-'+(++sequence.current),'viewer-'+sequence.current,'!charge',Date.now()),'One contribution. A little more life.')}
 function run(){let next=createDemo();for(let i=0;i<108;i++)next=contribute(next,'run-'+i,'viewer-'+i,'!charge',Date.now());setState(next);setMessage('Maya’s community woke the core. Willie is ready.');sound('wake')}

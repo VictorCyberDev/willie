@@ -8,3 +8,5 @@ html[data-overlay],html[data-overlay] body{background:transparent;overflow:hidde
 .document label{display:block;margin:18px 0}.document label>input,.document label>textarea,.document label>select{display:block;margin-top:8px;width:100%}.workspace-tabs{overflow-x:auto;white-space:nowrap}.workspace-tabs>a{flex-shrink:0}.document+.document{margin-top:20px}
 
 .state-grid .panel{overflow:clip;min-width:0}.state-grid .artifact{overflow:clip}
+
+.overlay .sound-toggle{right:12px;bottom:12px;padding:5px 8px;font-size:10px;opacity:.65;background:transparent;color:#eeeade;border:0}.overlay .sound-toggle:focus-visible,.overlay .sound-toggle:hover{opacity:1}
