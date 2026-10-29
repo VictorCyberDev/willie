@@ -22,7 +22,14 @@ jobs:
       - name: Migrate and seed
         run: pnpm migrate && pnpm seed
       - name: Lint
-        run: pnpm lint
+        shell: bash
+        run: |
+          mkdir -p test-results
+          set +e
+          pnpm exec eslint . --max-warnings=0 -f json > test-results/lint.json
+          status=$?
+          set -e
+          exit $status
       - name: Typecheck
         run: pnpm typecheck
       - name: Unit tests
