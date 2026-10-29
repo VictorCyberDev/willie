@@ -31,7 +31,15 @@ jobs:
           set -e
           exit $status
       - name: Typecheck
-        run: pnpm typecheck
+        shell: bash
+        run: |
+          mkdir -p test-results
+          set +e
+          pnpm typecheck > test-results/typecheck.txt 2>&1
+          status=$?
+          cat test-results/typecheck.txt
+          set -e
+          exit $status
       - name: Unit tests
         run: pnpm test
       - name: Property tests
