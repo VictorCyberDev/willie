@@ -24,22 +24,21 @@ jobs:
       - name: Lint
         shell: bash
         run: |
-          mkdir -p test-results
+          mkdir -p .ci-results
           set +e
-          pnpm exec eslint . --max-warnings=0 -f json > test-results/lint.json
+          pnpm exec eslint . --max-warnings=0 -f json > .ci-results/lint.json
           status=$?
-          echo $status > test-results/lint.exit
+          echo $status > .ci-results/lint.exit
           set -e
           exit $status
       - name: Typecheck
         shell: bash
         run: |
-          mkdir -p test-results
           set +e
-          pnpm typecheck > test-results/typecheck.txt 2>&1
+          pnpm typecheck > .ci-results/typecheck.txt 2>&1
           status=$?
-          echo $status > test-results/typecheck.exit
-          cat test-results/typecheck.txt
+          echo $status > .ci-results/typecheck.exit
+          cat .ci-results/typecheck.txt
           set -e
           exit $status
       - name: Unit tests
@@ -47,101 +46,105 @@ jobs:
         shell: bash
         run: |
           set +e
-          pnpm test > test-results/unit.txt 2>&1
+          pnpm test > .ci-results/unit.txt 2>&1
           status=$?
-          echo $status > test-results/unit.exit
-          cat test-results/unit.txt
+          echo $status > .ci-results/unit.exit
+          cat .ci-results/unit.txt
           exit $status
       - name: Property tests
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          pnpm test:property > test-results/property.txt 2>&1
+          pnpm test:property > .ci-results/property.txt 2>&1
           status=$?
-          echo $status > test-results/property.exit
-          cat test-results/property.txt
+          echo $status > .ci-results/property.exit
+          cat .ci-results/property.txt
           exit $status
       - name: Integration tests
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          pnpm test:integration > test-results/integration.txt 2>&1
+          pnpm test:integration > .ci-results/integration.txt 2>&1
           status=$?
-          echo $status > test-results/integration.exit
-          cat test-results/integration.txt
+          echo $status > .ci-results/integration.exit
+          cat .ci-results/integration.txt
           exit $status
       - name: Contract tests
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          pnpm test:contracts > test-results/contracts.txt 2>&1
+          pnpm test:contracts > .ci-results/contracts.txt 2>&1
           status=$?
-          echo $status > test-results/contracts.exit
-          cat test-results/contracts.txt
+          echo $status > .ci-results/contracts.exit
+          cat .ci-results/contracts.txt
           exit $status
       - name: Build
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          pnpm build > test-results/build.txt 2>&1
+          pnpm build > .ci-results/build.txt 2>&1
           status=$?
-          echo $status > test-results/build.exit
-          cat test-results/build.txt
+          echo $status > .ci-results/build.exit
+          cat .ci-results/build.txt
           exit $status
       - name: Browser E2E
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          pnpm test:e2e > test-results/e2e.txt 2>&1
+          pnpm test:e2e > .ci-results/e2e.txt 2>&1
           status=$?
-          echo $status > test-results/e2e.exit
-          cat test-results/e2e.txt
+          echo $status > .ci-results/e2e.exit
+          cat .ci-results/e2e.txt
           exit $status
       - name: M9 acceptance
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          pnpm test:m9 > test-results/m9.txt 2>&1
+          pnpm test:m9 > .ci-results/m9.txt 2>&1
           status=$?
-          echo $status > test-results/m9.exit
-          cat test-results/m9.txt
+          echo $status > .ci-results/m9.exit
+          cat .ci-results/m9.txt
           exit $status
       - name: Failure and restart acceptance
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          pnpm test:failure > test-results/failure.txt 2>&1
+          pnpm test:failure > .ci-results/failure.txt 2>&1
           status=$?
-          echo $status > test-results/failure.exit
-          cat test-results/failure.txt
+          echo $status > .ci-results/failure.exit
+          cat .ci-results/failure.txt
           exit $status
       - name: Docker build
         continue-on-error: true
         shell: bash
         run: |
           set +e
-          pnpm docker:build > test-results/docker.txt 2>&1
+          pnpm docker:build > .ci-results/docker.txt 2>&1
           status=$?
-          echo $status > test-results/docker.exit
-          cat test-results/docker.txt
+          echo $status > .ci-results/docker.exit
+          cat .ci-results/docker.txt
           exit $status
       - uses: actions/upload-artifact@v4
         if: always()
-        with: {name: browser-evidence, path: test-results}
+        with:
+          name: browser-evidence
+          path: |
+            test-results
+            .ci-results
       - name: Enforce acceptance gates
         if: always()
         shell: bash
         run: |
           failed=0
           for gate in lint typecheck unit property integration contracts build e2e m9 failure docker; do
-            status=$(cat "test-results/$gate.exit" 2>/dev/null || echo 1)
+            status=$(cat ".ci-results/$gate.exit" 2>/dev/null || echo 1)
             echo "$gate=$status"
             if [ "$status" != "0" ]; then failed=1; fi
           done
