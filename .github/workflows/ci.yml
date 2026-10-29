@@ -19,8 +19,30 @@ jobs:
         with: {node-version: 24, cache: pnpm}
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm migrate && pnpm seed
-      - run: pnpm lint && pnpm typecheck && pnpm test && pnpm test:property && pnpm test:integration && pnpm test:contracts && pnpm build && pnpm test:e2e && pnpm test:m9 && pnpm test:failure && pnpm docker:build
+      - name: Migrate and seed
+        run: pnpm migrate && pnpm seed
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Unit tests
+        run: pnpm test
+      - name: Property tests
+        run: pnpm test:property
+      - name: Integration tests
+        run: pnpm test:integration
+      - name: Contract tests
+        run: pnpm test:contracts
+      - name: Build
+        run: pnpm build
+      - name: Browser E2E
+        run: pnpm test:e2e
+      - name: M9 acceptance
+        run: pnpm test:m9
+      - name: Failure and restart acceptance
+        run: pnpm test:failure
+      - name: Docker build
+        run: pnpm docker:build
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: browser-evidence, path: test-results}
