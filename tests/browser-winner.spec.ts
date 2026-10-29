@@ -1,0 +1,3 @@
+import{test,expect}from'@playwright/test';
+test('winner landing explains Willie before technical proof',async({page})=>{await page.goto('/');await expect(page.getByRole('heading',{name:/One live thing/i})).toBeVisible();await expect(page.getByText('Twitch moves audiences. Willie gives them something worth following.')).toBeVisible();await expect(page.getByText(/MISSION PREVIEW — LIVE COUNTERS APPEAR ONLY AFTER A RELAY IS COMMISSIONED/)).toBeVisible();});
+test('public Willie route refuses invented lifecycle counters',async({page})=>{await page.goto('/willie/not-commissioned');await expect(page.getByText('NO AUTHORITATIVE RELAY FOUND')).toBeVisible();await expect(page.getByRole('heading',{name:/is not public yet/i})).toBeVisible();});
