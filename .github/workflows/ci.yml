@@ -1,5 +1,8 @@
 name: Willie acceptance
 on: [push, pull_request]
+concurrency:
+  group: willie-acceptance-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   acceptance:
     runs-on: ubuntu-latest
@@ -135,6 +138,7 @@ jobs:
         if: always()
         with:
           name: browser-evidence
+          include-hidden-files: true
           path: |
             test-results
             .ci-results
