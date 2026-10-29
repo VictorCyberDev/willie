@@ -24,7 +24,7 @@ it('persists relay progress, chapter memory and permanent marks across a real do
  state=await repo.mutate(id,1,x=>accept(x,'dest-'+id,x.version,2300));
  const persisted=await pool.query('SELECT current_holder,current_willie_version,successful_handoffs,communities_visited,progress FROM relays WHERE id=$1',[relay.id]);
  expect(persisted.rows[0]).toMatchObject({current_holder:'dest-'+id,current_willie_version:2,successful_handoffs:1,communities_visited:2,progress:2});
- const chapters=await pool.query('SELECT chapter_number,community_id,mark_id,receipt_id FROM passport_chapters WHERE relay_id=$1 ORDER BY chapter_number',[relay.id]);
- expect(chapters.rows).toHaveLength(2);expect(chapters.rows[0].mark_id).toBe(mark.id);expect(chapters.rows[0].receipt_id).toBeTruthy();expect(chapters.rows[1].community_id).toBe('dest-'+id);
+ const chapters=await pool.query('SELECT chapter_number,community_id,mark_id,receipt_id,before_version,after_version FROM passport_chapters WHERE relay_id=$1 ORDER BY chapter_number',[relay.id]);
+ expect(chapters.rows).toHaveLength(2);expect(chapters.rows[0].mark_id).toBe(mark.id);expect(chapters.rows[0].receipt_id).toBeTruthy();expect(chapters.rows[0]).toMatchObject({before_version:1,after_version:2});expect(chapters.rows[1]).toMatchObject({community_id:'dest-'+id,before_version:2,after_version:null});
  const restarted=createPool(url!);try{expect((await restarted.query('SELECT count(*)::int count FROM community_marks WHERE relay_id=$1',[relay.id])).rows[0].count).toBe(1);expect((await restarted.query('SELECT count(*)::int count FROM passport_chapters WHERE relay_id=$1',[relay.id])).rows[0].count).toBe(2);}finally{await restarted.end();}
 });
