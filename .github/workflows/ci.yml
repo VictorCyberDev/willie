@@ -28,6 +28,7 @@ jobs:
           set +e
           pnpm exec eslint . --max-warnings=0 -f json > test-results/lint.json
           status=$?
+          echo $status > test-results/lint.exit
           set -e
           exit $status
       - name: Typecheck
@@ -37,27 +38,111 @@ jobs:
           set +e
           pnpm typecheck > test-results/typecheck.txt 2>&1
           status=$?
+          echo $status > test-results/typecheck.exit
           cat test-results/typecheck.txt
           set -e
           exit $status
       - name: Unit tests
-        run: pnpm test
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test > test-results/unit.txt 2>&1
+          status=$?
+          echo $status > test-results/unit.exit
+          cat test-results/unit.txt
+          exit $status
       - name: Property tests
-        run: pnpm test:property
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:property > test-results/property.txt 2>&1
+          status=$?
+          echo $status > test-results/property.exit
+          cat test-results/property.txt
+          exit $status
       - name: Integration tests
-        run: pnpm test:integration
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:integration > test-results/integration.txt 2>&1
+          status=$?
+          echo $status > test-results/integration.exit
+          cat test-results/integration.txt
+          exit $status
       - name: Contract tests
-        run: pnpm test:contracts
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:contracts > test-results/contracts.txt 2>&1
+          status=$?
+          echo $status > test-results/contracts.exit
+          cat test-results/contracts.txt
+          exit $status
       - name: Build
-        run: pnpm build
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm build > test-results/build.txt 2>&1
+          status=$?
+          echo $status > test-results/build.exit
+          cat test-results/build.txt
+          exit $status
       - name: Browser E2E
-        run: pnpm test:e2e
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:e2e > test-results/e2e.txt 2>&1
+          status=$?
+          echo $status > test-results/e2e.exit
+          cat test-results/e2e.txt
+          exit $status
       - name: M9 acceptance
-        run: pnpm test:m9
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:m9 > test-results/m9.txt 2>&1
+          status=$?
+          echo $status > test-results/m9.exit
+          cat test-results/m9.txt
+          exit $status
       - name: Failure and restart acceptance
-        run: pnpm test:failure
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:failure > test-results/failure.txt 2>&1
+          status=$?
+          echo $status > test-results/failure.exit
+          cat test-results/failure.txt
+          exit $status
       - name: Docker build
-        run: pnpm docker:build
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm docker:build > test-results/docker.txt 2>&1
+          status=$?
+          echo $status > test-results/docker.exit
+          cat test-results/docker.txt
+          exit $status
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: browser-evidence, path: test-results}
+      - name: Enforce acceptance gates
+        if: always()
+        shell: bash
+        run: |
+          failed=0
+          for gate in lint typecheck unit property integration contracts build e2e m9 failure docker; do
+            status=$(cat "test-results/$gate.exit" 2>/dev/null || echo 1)
+            echo "$gate=$status"
+            if [ "$status" != "0" ]; then failed=1; fi
+          done
+          exit $failed
