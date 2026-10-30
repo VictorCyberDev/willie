@@ -1,24 +1,17 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "services": {
+    "willie": {
+      "root": ".",
+      "entrypoint": "Dockerfile"
+    }
+  },
   "rewrites": [
     {
-      "source": "/judge/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/app/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/overlay/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/dev/design",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/developers/:path*",
-      "destination": "/index.html"
+      "source": "/(.*)",
+      "destination": {
+        "service": "willie"
+      }
     }
   ],
   "headers": [
