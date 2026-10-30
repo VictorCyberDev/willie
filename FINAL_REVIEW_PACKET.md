@@ -1,181 +1,231 @@
-# Willie independent review packet
-Implementation evidence and acceptance boundaries. Milestone labels are not proof; external provider acceptance remains pending.
+# Willie — Final Review Packet
 
-## A — Repository
-Repository: https://github.com/VictorCyberDev/willie
-Owner: VictorCyberDev
-Default branch: main
-Authoritative branch: integration/willie-m0-m16 before PR#1 merge; main after merge.
-Integration branch: integration/willie-m0-m16
-Starting authority HEAD: e7e6672a1457c956d3340632a27dafdc03ff0924
-Accepted implementation HEAD: b4d75739ac5285c7400fafd67c685ab7d406e6fe
-Final PR: https://github.com/VictorCyberDev/willie/pull/1
-Final repository HEAD and merge status: the linked PR's merge metadata and the final execution report are authoritative. This evidence file is committed after the implementation checkpoint, so its own commit is resolved from Git rather than embedded recursively.
-M9 contract checkpoint: hackathon-m9-contract-accepted at adfe8ade1a693a8fc69357259f6092bfb2b09728. This is a frozen branch reference, not a Git tag or a live Twitch acceptance claim.
+**Authoritative Winner Release acceptance record — M0–M28**
 
-## B — Milestone matrix
-|Milestone|Status|Commit|Code|Tests|Live acceptance|Docs|Blockers|
-|---|---|---|---|---|---|---|---|
-|M0 — Foundation|LOCAL_ACCEPTED|2548829|Implemented|install/migrate/seed/lint/types/tests/build/Docker|Not required for local gate|docs/execution/M0.md|None|
-|M1 — Brand, motion, sound|LOCAL_ACCEPTED|e8113ac|Implemented|12 visual states, responsive/OBS and saved mute controls|Not required for local gate|docs/execution/M1.md|Scoped visual/accessibility limits|
-|M2 — Deterministic authority|LOCAL_ACCEPTED|c9b985a|Implemented|10,000 sequences, hashes, DB races/outbox/replay|Not required for local gate|docs/execution/M2.md|None|
-|M3 — Twitch foundation|CONTRACT_TESTED / EXTERNAL_ACCEPTANCE_PENDING|f07a253|Implemented|OAuth, EventSub (12 tests), provider contracts|Pending|docs/execution/M3.md|Real Twitch credentials/consent|
-|M4 — Creator orchestration|LOCAL_ACCEPTED|be480f6|Implemented|two-context UI, readiness, invite ledger, route/rotation|Not required for local gate|docs/execution/M4.md|Live use depends on M3|
-|M5 — Community participation|LOCAL_ACCEPTED|bce238e|Implemented|bounded/cooldown/unique-origin contribution tests|Not required for local gate|docs/execution/M5.md|Live chat depends on M3|
-|M6 — Signature Handoff|LOCAL_ACCEPTED / EXTERNAL_ACCEPTANCE_PENDING|07aaa36|Implemented|dual overlay, race receive, unchanged progress/proof|Pending|docs/execution/M6.md|Real two-account raid|
-|M7 — Failure/security|LOCAL_ACCEPTED|b4d7573|Implemented|revocation races, fencing, signatures, pause, failure checks|Not required for local gate|docs/execution/M7.md|Scoped review limits|
-|M8 — Passport, Receipt, Judge|LOCAL_ACCEPTED|07aaa36|Implemented|public replay, attacks and durable proof|Not required for local gate|docs/execution/M8.md|None|
-|M9 — Hackathon checkpoint|LOCAL_ACCEPTED / EXTERNAL_ACCEPTANCE_PENDING|0aa5991|Implemented|M9 domain plus 12 browser checks|Pending|docs/execution/M9.md|Live Twitch/video/session ID|
-|M10 — Shared Chat co-op|LOCAL_ACCEPTED / EXTERNAL_ACCEPTANCE_PENDING|f5fa8fa|Implemented|server origin attribution, concurrent co-op/dedupe/end|Pending|docs/execution/M10.md|Real Shared Chat session|
-|M11 — Declarative templates|LOCAL_ACCEPTED|f07a253|Implemented|validated import/export/preview, policy-driven engine|Not required for local gate|docs/execution/M11.md|None|
-|M12 — Tiltify adapter|CONTRACT_TESTED / EXTERNAL_ACCEPTANCE_PENDING|f07a253|Implemented|v5 contract and actual host→domain→Postgres fixture|Pending|docs/execution/M12.md|Real read credential|
-|M13 — Power-Ups/Hype|CONTRACT_TESTED / EXTERNAL_ACCEPTANCE_PENDING|4670fec|Implemented|official shapes, optional scopes and bounded paid policy|Pending|docs/execution/M13.md|Eligible channel/grants/events|
-|M14 — Brand orchestration|LOCAL_ACCEPTED|ec891b1|Implemented|operator replay/export proof, roster and emergency stop|Not required for local gate|docs/execution/M14.md|None|
-|M15 — Public adapter SDK|LOCAL_ACCEPTED|f07a253|Implemented|public imports, two example adapters, conformance (4 tests)|Not required for local gate|docs/execution/M15.md|None|
-|M16 — Cross-platform transport|LOCAL_ACCEPTED / EXTERNAL_ACCEPTANCE_PENDING|4e30b9c|Implemented|ordered dual consent, YouTube poll and stale generation|Pending|docs/execution/M16.md|Real YouTube/Kick credentials|
+Product: **Willie — One live thing. Many communities. One continuing story.**
 
+Category: persistent social object for live communities.
 
-## C — Product
-Willie is a shared live object that communities change together and creators can safely hand from one live stream to another.
-Handoff moves custody only through the authoritative engine. Passport records its journey. Receipt records provider evidence, consent, versions and hashes. Route organizes participating creators. Bounded contributions change progress; declarative templates configure stages and rules. Adapters normalize external events.
+Primary strategic line: **Twitch moves audiences. Willie gives them something worth following.**
 
-## D — Innovation claim
-«Willie turns creator-to-creator live transitions into explicit, consent-driven, verifiable state transitions for one shared live experience. A participating creator can transfer custody of Willie to another participating creator while Willie retains its authoritative state, provenance, campaign progress and visible history.»
-«A Twitch raid is evidence that the creator-to-creator transition occurred. The raid itself does not automatically transfer Willie.»
-Willie does not claim to have invented Twitch interactivity, persistent livestream progression, raids, overlays, multiplayer stream games, shared viewer identity, rewards, creator collaboration or broad cross-channel state. No blockchain claim.
+This file is the single authoritative milestone/status record. Historical milestone notes remain evidence, but they do not override this matrix.
 
-## E — Architecture
-React/Vite web application; Fastify long-running TypeScript server; pure deterministic domain; normalized Postgres authority; durable outbox; SSE snapshot gateway.
-Packages: domain, db, twitch, adapters, campaigns, sdk.
-Provider adapters cannot directly assign custody. Browsers request authorized commands. Domain validation and row-locked database transactions commit custody.
-State progression: IDLE → PREPARED → PROVIDER_VERIFIED → AWAITING_ACCEPTANCE → COMMITTING → COMMITTED. Abort and pause are safety branches; committed history is terminal.
-See docs/ARCHITECTURE.md.
+## Repository authority
 
-## F — Data model
-Versioned migrations:
-- 001: normalized authority, provenance, contributions, envelopes, append-only domain events and outbox.
-- 002: operational sessions, invitations, membership readiness/heartbeat/route ordering and composite membership FKs.
-- 003: adapter ownership/health, dual-consent records, Shared Chat sessions and campaign settings.
-- 004: account epochs/deletion timestamps, OAuth issue timestamps and hashed identity revocation tombstones.
+- Repository: `VictorCyberDev/willie`
+- Release branch: `integration/willie-winner-release`
+- Main baseline: `c6d42b19b0daf8cd0fd58d56f3b14d1702928610`
+- Main remains the M0–M16 accepted foundation until the Winner Release passes its real Twitch gate and release PR is accepted.
+- Winner-release work is persisted remotely after every substantial checkpoint; no release milestone depends on an uncommitted sandbox state.
 
-Tables include users, provider_connections, campaigns, campaign_members, willies, willie_snapshots, custodies, handoffs, handoff_evidence, passport_stamps, receipts, contributions, milestones, event_envelopes, domain_events, outbox_events, overlay_sessions, campaign_templates, adapter_connections, brand_briefs, brand_deliverables, external_platform_identities, creator_sessions, oauth_states, invitations, dual_consents, shared_sessions, campaign_settings and account_identity_tombstones.
-Custody mutation locks the current snapshot and validates version, membership, proof and hashes. Provider envelopes, handoff receipts and stamps are unique. Domain event update/delete is rejected by DB trigger. Logical invitation issuance and token creation now commit together.
-Production and acceptance databases are separate. Tests refuse DATABASE_URL as fallback for TEST_DATABASE_URL.
+## Remote checkpoint anchors
 
-## G — Twitch
-Initial OAuth scope: user:read:chat. Optional explicit capability grants: bits:read and channel:read:hype_train. No channel:manage:raids.
-WebSocket EventSub: channel.raid, channel.chat.message, channel.shared_chat.begin/update/end; optional documented custom Power-Up and Hype Train v2 paths when grants exist. Authorization revocation freezes affected handoffs. Chat commands are recognized deterministically; full chat is not archived.
-Raid source/destination/time/version/member/consent checks all apply. Viewer count grants no authority. Controlled reconnect overlaps sockets; hard loss and startup evidence gaps pause handoffs. Lifecycle heartbeats bypass bounded database notification work. Startup/hourly token validation, refresh, encrypted persistence and disconnect exist.
-Status: CONTRACT_TESTED / EXTERNAL_ACCEPTANCE_PENDING. No real OAuth, live EventSub or raid has been accepted.
+| Checkpoint | Remote anchor | Evidence |
+|---|---|---|
+| A — M17–M22 core winner experience | `86cf674222630e3a30959b5ecff743e6cfe6d648` | Relay/marks/votes/Passport transactional APIs on top of `1dad0da9b2196f6a5d4801cb53d2829b5180d8e1`; later persistence fixes retained. |
+| B — M24 + winner visual experience | `6f6630f62d62d73a5b158f4c49a71f8bea9cd990` | Watch Willie, Stage Mode, Judge Mode V2, narrative-state presentation, simulated evidence label. |
+| C — M23 + M25 | `f0d20a1f42d38b7b7c9864b900f0f1b8d563942e` | Clip Memory + Legacy; full GitHub acceptance run `41018300879` passed. |
+| D1 — official Twitch CLI | `1421b5fa59daf2fb86484c930b7531c7edbb2037` | Twitch CLI 1.1.24 drove Willie's real EventSub WebSocket raid path; `CLI_ACCEPTED`. |
+| D2 — persistent service architecture | `6b3d2667e705e982a1dbac5462db768594e42161` | Vercel Services/container routing; Fastify `/health` and DB `/ready` accepted on isolated preview. |
+| F — focused security/regression closeout | `20fbe738e3a4b53447fe8660c7d6686da489eb3f` | Winner surface security review after runtime-readiness and regression additions. |
+| G — winner presentation package | `405b1b95a0646a8dcfbeb2d56e4b12e9c057014e` plus subsequent release-doc consolidation | 2:58 script, shot list, live runbook, Codex disclosure, Devpost requirements and truth classes. |
 
-## H — Tiltify
-Official v5 API polling implementation, opaque pagination, overlap/deduplication, encrypted credentials, bounded paid contribution, retry/disconnect and health.
-Contract and server→Postgres→domain fixture acceptance passed. Donor names/email are excluded.
-Status: CONTRACT_TESTED / EXTERNAL_ACCEPTANCE_PENDING. No real provider read recorded.
+## M0–M28 acceptance matrix
 
-## I — YouTube
-YouTube implements OAuth/PKCE, owned identity/broadcast discovery, REST live-chat consumption, page tokens, documented polling intervals, encrypted token refresh, connection health and disconnect.
-The server/Postgres fixture proves Twitch contribution → ordered destination confirmation/source send/destination receive → DUAL_CONSENT receipt and verified YouTube Passport identity → continued YouTube contribution through the actual poller.
-A delayed in-flight response after adapter generation replacement produces no contribution/envelope and cannot overwrite the newer checkpoint.
-Status: LOCAL_ACCEPTED / EXTERNAL_ACCEPTANCE_PENDING. No live YouTube connection is claimed. No native YouTube raid primitive is invented.
+`LIVE_ACCEPTED` is deliberately absent unless genuine provider behavior has occurred. `CLI_ACCEPTED` is not live proof.
 
-## J — Kick
-OAuth/PKCE, owned identity, event subscription, official public-key RSA verification, normalized recognized chat, encrypted credentials, health and disconnect.
-No native raid evidence claimed. Remote subscription/grant revocation cannot be claimed from local disconnect alone.
-Status: CONTRACT_TESTED / EXTERNAL_ACCEPTANCE_PENDING.
+| Milestone | Status | Primary commit/evidence | Tests / provider evidence | Live evidence | Known limitation / blocker |
+|---|---|---|---|---|---|
+| M0 — Foundation/research | CONTRACT_TESTED | M0–M16 baseline `c6d42b19…` | clean install/build/CI foundation | Not required | Historical research remains bounded by its cited sources. |
+| M1 — Artifact design/motion/audio | LOCAL_ACCEPTED | M0–M16 baseline | browser/OBS/reduced-motion/mute acceptance | Not required | Visual review is not a full WCAG certification. |
+| M2 — Deterministic authority/Postgres | CONTRACT_TESTED | M0–M16 baseline | unit, integration, concurrency, replay, 10,000 randomized sequences | Not required | None established. |
+| M3 — Twitch OAuth/EventSub foundation | CONTRACT_TESTED | M0–M16 baseline | OAuth/EventSub contracts, parser, reconnect/gap/revocation tests | None | Real Twitch application credentials/accounts still required. |
+| M4 — Creator orchestration | CONTRACT_TESTED | M0–M16 baseline | readiness/member/route/rotation integration | None | Live operation depends on real Twitch OAuth. |
+| M5 — Bounded community participation | CONTRACT_TESTED | M0–M16 baseline | cooldown, dedupe, fairness, community bounds | None | Real chat acceptance is part of M26 live gate. |
+| M6 — Signature Handoff | CONTRACT_TESTED | M0–M16 baseline | prepare/evidence/receive races, immutable proof | None | Real two-broadcaster raid/receive pending. |
+| M7 — Security/failure/restart | CONTRACT_TESTED | M0–M16 baseline | revocation races, stale worker fencing, SIGKILL/Postgres restart acceptance | None | Broader multi-replica stress remains outside hackathon scope. |
+| M8 — Passport/Receipt/Judge | LOCAL_ACCEPTED | M0–M16 baseline | browser replay + durable proof + attack lab | None | Judge data is explicitly simulated. |
+| M9 — Hackathon checkpoint | CONTRACT_TESTED | M0–M16 baseline | domain + browser acceptance | None | Final live Twitch/video/submission gates supersede it. |
+| M10 — Shared Chat | CONTRACT_TESTED | M0–M16 baseline | normalized Shared Chat begin/update/end + attribution/dedupe | None | Real channel eligibility/session not yet accepted. |
+| M11 — Declarative templates | CONTRACT_TESTED | M0–M16 baseline | schema/import/export/preview/policy tests | Not required | None established. |
+| M12 — Tiltify adapter | CONTRACT_TESTED | M0–M16 baseline | adapter contracts + host/domain/Postgres fixture | None | Real provider credential not commissioned for this release. |
+| M13 — Power-Up/Bits + Hype | CONTRACT_TESTED | M0–M16 baseline | optional-scope + bounded paid-event contracts | None | Real eligible Twitch channel/event acceptance deferred until after flagship raid. |
+| M14 — Brand orchestration | CONTRACT_TESTED | M0–M16 baseline | roster/control/export/stop proof | Not required | Future commercial Relay concepts are not submission-critical live claims. |
+| M15 — Public SDK | CONTRACT_TESTED | M0–M16 baseline | public imports/examples/conformance | Not required | None established. |
+| M16 — YouTube/Kick dual-consent adapters | CONTRACT_TESTED | M0–M16 baseline | ordered dual consent, polling, stale generation tests | None | No new YouTube/Kick work is being added under scope freeze. |
+| M17 — Winner Product Constitution | CONTRACT_TESTED | `1dad0da9…` + `PRODUCT_CONSTITUTION.md` | hierarchy/scope/authority reviewed in winner suite | Not required | None established. |
+| M18 — Willie Relay | CONTRACT_TESTED | `1dad0da9…`, `86cf6742…` | authority, monotonic progress, DB persistence, receipt-driven advancement | None | Real Relay will be commissioned during M26 live flow. |
+| M19 — Living Willie V2 | LOCAL_ACCEPTED | `28ebb77a…` | browser/responsive/reduced-motion/keyboard/Stage acceptance | None | Real provider state animation awaits M26 live run. |
+| M20 — Permanent Community Marks | CONTRACT_TESTED | `1dad0da9…`, `86cf6742…` | deterministic mark/provenance, duplicate/stale/cross-Relay guards | None | Real chat-selected mark awaits M26 live run. |
+| M21 — Community Decision Rituals | CONTRACT_TESTED | `1dad0da9…`, `86cf6742…` | candidate bounds, windows, dedupe, tie, stale, creator approval | None | Chat never has custody authority by design. |
+| M22 — Passport V2 / Chapters | CONTRACT_TESTED | `1dad0da9…`, persistence fixes through `f26ba397…` | chapter uniqueness, before/after version, Receipt/provider proof, preservation | None | Real Twitch chapter evidence awaits M26 live run. |
+| M23 — Twitch Clip Memory | CONTRACT_TESTED | `f0d20a1f…` | separate `clips:edit` OAuth, async create/poll, URL allowlist, failure isolation | None | Real live broadcaster clip not yet returned by Twitch. |
+| M24 — Watch Willie / Stage / Judge V2 | LOCAL_ACCEPTED | `6f6630f6…` | browser E2E, public story API, room-scale mode, explicit simulated Judge label | None | Public real journey awaits a commissioned real Relay. |
+| M25 — Community Legacy | CONTRACT_TESTED | `f0d20a1f…` | authoritative chapter-derived legacy artifact + URL/test coverage | None | Real chapter content awaits M26 live run. |
+| M26 — Twitch commissioning | CLI_ACCEPTED | `1421b5fa…`, persistent runtime `6b3d2667…` | official Twitch CLI raid; container health/readiness; OAuth/EventSub contracts | No real two-account raid yet | Production DB migration approval + Twitch client credentials + two broadcaster logins/streams/real raid are required. |
+| M27 — Native Twitch enrichment | CONTRACT_TESTED | inherited M10/M13 provider paths | Shared Chat/Bits/Hype contracts | None | Per scope, real enrichment is attempted only after M26 real raid acceptance and only where account eligibility allows. |
+| M28 — Winner presentation + submission | EXTERNAL_ACCEPTANCE_PENDING | script/shotlist/runbook/Devpost draft | submission requirements verified; project draft exists | No final video/submission confirmation | Canonical Codex Session ID, real footage/YouTube URL, submitter questionnaire/legal answers, and final Devpost submit remain. |
 
-## K — Actual test evidence
-Counts are actual, not estimates. Vitest categories below partition the 94-test regression; dedicated commands repeat subsets.
+## Test acceptance
 
-| Category | Count | Evidence |
-|---|---:|---|
-| Unit and component/service logic | 62 | domain9, security14, EventSub (12 tests), HTTP7, M9 domain1, campaigns7, initialization3, expiry2, adapter conformance (4 tests), time2, worker capacity1 |
-| Property | 1 | 10,000 randomized handoff sequences |
-| Database/server integration | 17 | database5, orchestration7, cross-platform2, revocation3 |
-| Provider contracts | 14 | Twitch, Tiltify, YouTube, Kick, OAuth/signature shapes |
-| Total Vitest | 94 | 17 test files |
-| Browser E2E | 12 | authenticated two-creator journey, public replay/failure/responsive/OBS, brand proof, unavailable service, saved audio preferences |
-| M9 protection | 1 domain + 12 browser | pnpm test:m9 |
-| Deployed public browser checks | 11 | same public suite against https://willie-phi.vercel.app |
+The release branch acceptance workflow covers:
 
-Clean-checkout acceptance: install, clean migration/seed, lint, typecheck, full regression, dedicated property/integration/contracts, build, E2E, M9 and Docker build have passed at recorded checkpoints. Final source CI is linked in section L.
-Authenticated evidence captures 23 screenshots: console/armed/arrival/Passport/Receipt at 375/768/1440 and sleeping/active/awaiting-receive/paused OBS at 1920×1080 and 1280×720.
-Failure injection: five actual SIGKILL/Postgres-restart gates passed via pnpm test:failure on its own disposable loopback Postgres 17 container. Provider messages remain SIMULATED_CONTRACT. See docs/SECURITY_REVIEW.md.
+- lint
+- TypeScript typecheck
+- unit tests
+- 10,000-sequence property tests
+- PostgreSQL integration/concurrency tests
+- provider contract tests
+- browser E2E
+- M9 regression
+- failure/restart acceptance
+- production build
+- Docker non-root image build
 
-## L — CI
-Workflow: .github/workflows/ci.yml
-Clean Ubuntu checkout, Node 24/pnpm 10, Postgres 17 service, Chromium install, explicit migrations and deterministic seed, lint, typecheck, all tests, production build, browser/M9 checks, real process/database failure acceptance and Docker build. Browser evidence is uploaded as browser-evidence.
-Verified source checkpoint run: [Willie acceptance run 40668357076](https://github.com/VictorCyberDev/willie/actions/runs/40668357076) — success, final source b4d7573.
-Final packet-only commit checks and merge result are linked from PR#1. A local run is never represented as hosted CI success.
+Checkpoint C's complete remote run is green. Winner runtime readiness adds an explicit `/release-ready` gate requiring migration version 9 plus `relays`, `passport_chapters`, `community_marks`, `relay_votes` and `winner_clip_requests`.
 
-## M — Security
-Controls: OAuth state; PKCE where supported; HttpOnly/SameSite cookies; Origin-based CSRF defense; strict env/input validation; separate read/write rate budgets; signed fresh provider envelopes; dedupe; AES-256-GCM token encryption; role/membership authorization; user-epoch and snapshot row locks; CSP/security headers; expiring read-only overlay tokens and owner-only rotation.
-Account deletion increments a persisted epoch, removes local credentials/sessions/overlay access, clears adapter config and pauses affected campaigns. Stale transactions remain rejected after reactivation. OAuth issue-time/tombstone checks run before persistence and after identity insertion, catching cross-account uniqueness waits. Historical provenance and hashed revocation records are disclosed as retained.
-Independent scoped Codex review established no remaining P0/P1 from its identified concerns after repairs and tests. It was a context/excerpt review, not a full independent source certification. See docs/SECURITY_REVIEW.md for findings and limits.
-Repaired: pooled-session advisory lock stalls, worker headroom, generation/checkpoint fencing, outbox single-connection deadlock, nonfinite times, source/destination proof identity, OAuth deletion replay, optional grant preservation, overlay pause priority and invitation audit transaction.
-Production dependency audit: no known vulnerabilities at the final recorded audit. No secrets are committed or logged.
+## Twitch acceptance
 
-## N — Design
-Willie is a nonhuman six-segment physical capsule with luminous core and permanent Passport marks. Graphite, warm bone and orange preserve a deliberate identity; sans copy and selective monospace distinguish operational/protocol language.
-Motion uses authoritative timestamps and graceful interpolation. Hold to Receive is750ms; partial holds do not authorize receipt. Reduced motion, keyboard focus and muted operation remain functional.
-Generated Wake/Send/Receive Web Audio now observes authoritative creator/overlay snapshots. Global and independent overlay mute preferences are saved and start muted.
-Independent desktop landing review found no P0/P1; annotation overlap and small labels were repaired. Automated responsive, keyboard, reduced-motion and dual-overlay acceptance passed. These checks do not certify every WCAG criterion or every device.
-Committed screenshots: docs/screenshots/landing.jpg, judge.jpg, design.jpg.
-Generated authenticated evidence: test-results/acceptance/*.png, available in CI browser-evidence artifacts. The suite captures console, armed, arrival, Passport, Receipt and four OBS states at the required sizes.
+### Official CLI — CLI_ACCEPTED
 
-## O — Deployment
-Dedicated Vercel project: prj_DDMlTddjDuuEzkQpPTSZFawNlAsu
-Public frontend/Judge: https://willie-phi.vercel.app/judge
-Deployment: dpl_55dXcxAdSKGvD98vrYAw9safW4Xm, source b4d75739ac5285c7400fafd67c685ab7d406e6fe.
-The public static deployment is not the persistent provider backend. Creator-service absence is explained in the UI.
-Long-running container is built and smoke-tested: direct compiled Node startup, nonroot runtime, configured-port health check, /health200 and /ready200, no runtime package download. Stable backend hosting remains an external configuration action.
-Dedicated Neon project: green-hall-57124021. Production branch br-rough-block-za7tcppl/database willie. Acceptance branch br-red-dew-zaric03h uses separate disposable databases. Production migrations001–004 applied; integration tests never use the production DB.
-Other owner projects/databases were not modified. Supabase free quota prevented separate creation; no existing project was paused/deleted.
+Twitch CLI `1.1.24` and its official mock EventSub WebSocket server drove Willie's real `TwitchEventSub` transport. Willie reached `HEALTHY` and emitted the normalized `channel.raid` notice for source `111` → destination `222`. See `docs/execution/TWITCH_CLI_ACCEPTANCE.md`.
 
-## P — Hackathon
-M9 local/contract/browser acceptance passed and remains protected by pnpm test:m9. Real Twitch OAuth/two-account raid acceptance remains EXTERNAL_ACCEPTANCE_PENDING.
-Judge Mode requires no account and visibly states SIMULATED REPLAY. Brand/operator replay and proof exports are also explicitly simulated.
-Submission assets: SUBMISSION_DESCRIPTION.md, DEVPOST_CHECKLIST.md, VIDEO_SCRIPT.md, VIDEO_SHOTLIST.md, DEMO_RUNBOOK.md, TESTING_INSTRUCTIONS.md, JUDGE_RUBRIC_MAP.md and REAL_VS_SIMULATED.md.
-Video script/shot list are prepared; a live Twitch demonstration video is not fabricated. No Devpost submission occurred.
-Codex engineering/review evidence: docs/BUILT_WITH_CODEX.md. Canonical session ID is not exposed by this environment; it remains a submission metadata blocker. Sandbox/agent IDs are not substituted.
+This proves the supported raid WebSocket transport/parser against Twitch's simulator. It does **not** prove a real broadcaster raid.
 
-## Q — Real versus simulated
-Real infrastructure and engineering acceptance: deployed frontend, Postgres migrations/transactions, server HTTP/SSE implementation, container build/start/health, actual browser operation, process/database failure checks where recorded.
-Simulated/provider-contract data: Judge seed WILLIE-7, development Maya/Victor/Lex, fixture authenticated creators, raid-shaped events, charity donation fixtures, Shared Chat copies, optional paid events and cross-platform messages.
-No external provider is LIVE_ACCEPTED. Twitch, Shared Chat, Power-Ups, Hype Train, Tiltify, YouTube and Kick all require real provider acceptance. A fixture receipt exercising the native protocol is labelled SIMULATED CONTRACT by its test environment; public Judge receipts use SIMULATED_JUDGE_REPLAY.
+### OAuth/EventSub — CONTRACT_TESTED
 
-## R — Unavoidable external owner actions
-1. Persistent backend hosting
-ACTION: Deploy the supplied container on a long-running host.
-WHY: Vercel's static frontend does not host the persistent provider workers.
-EXACT STEPS: Build Dockerfile; configure dedicated Willie DATABASE_URL, SESSION_SECRET, TOKEN_ENCRYPTION_KEY, APP_URL and PORT; run pnpm migrate; start the container; verify /health and /ready. Prefer a region near the dedicated Neon database. Serve the frontend and API under the configured application origin.
-UNLOCKS: stable creator/OBS/provider operation.
+OAuth state, token validation/refresh/revocation, encrypted token storage, EventSub subscription logic, deduplication, stale/future filtering, provider gaps and recovery are contract/integration tested. Vercel Willie currently has no `TWITCH_CLIENT_ID`/`TWITCH_CLIENT_SECRET`, so real OAuth is not commissioned yet.
 
-2. Real provider credentials and consent
-ACTION: Register/configure the intended provider applications and grant minimum permissions.
-EXACT STEPS: Configure TWITCH_CLIENT_ID/SECRET with /auth/twitch/callback; YOUTUBE_CLIENT_ID/SECRET with /auth/youtube/callback; KICK_CLIENT_ID/SECRET with /auth/kick/callback. Configure the Kick webhook URL to /api/kick/eventsub. Connect Tiltify from the campaign Adapters UI using its campaign ID and read credential. Keep secrets in the host secret store or encrypted adapter config. Enable optional Twitch scopes only through explicit Power-Up/Hype controls.
-WHY: No real provider credentials were available.
-UNLOCKS: each provider's LIVE_ACCEPTED path.
+### Real two-broadcaster gate — EXTERNAL_ACCEPTANCE_PENDING
 
-3. Native Twitch demonstration
-ACTION: Two participating creators authorize, connect OBS, ready/arm, perform the native Twitch raid and Hold to Receive.
-WHY: Fixture evidence cannot prove a real raid.
-EXACT STEPS: Follow DEMO_RUNBOOK.md, save real Receipt/Passport evidence and record the prepared under-three-minute shot list.
-UNLOCKS: M3/M6/M9 live acceptance and live video evidence.
+`LIVE_ACCEPTED` requires all of the following genuine behavior:
 
-4. Canonical session/submission review
-ACTION: Retrieve the primary Codex session's canonical ID from its UI/export and add it to docs/BUILT_WITH_CODEX.md; owner-review the submission package.
-WHY: Session metadata is not exposed through the available execution environment.
-UNLOCKS: complete hackathon metadata. Devpost final submission remains owner-reviewed.
+1. source broadcaster authenticates;
+2. destination broadcaster authenticates;
+3. both are healthy/ready;
+4. active Relay + source custody;
+5. real Twitch chat changes Willie;
+6. permanent mark/ritual works where practical;
+7. destination is creator-approved and prepared;
+8. source performs a real Twitch raid;
+9. genuine `channel.raid` evidence matches source/destination/timing/version;
+10. custody remains source while Willie is awaiting acceptance;
+11. destination performs Hold to Receive;
+12. exactly one custody commit occurs;
+13. progress, marks, Relay and Passport survive;
+14. Receipt + Chapter write;
+15. duplicate raid cannot recommit;
+16. source/destination overlays and Watch Willie update;
+17. destination community can continue the story.
 
-## S — Known limitations and unfinished gates
-- Real provider acceptance and stable persistent backend hosting remain external-only actions; the deployed Judge is a simulation.
-- Canonical Codex session ID and a real Twitch video are not available. No Devpost submission was made.
-- Independent reviews were scoped context/excerpt reviews. Broader multi-replica stress and comprehensive independent source/accessibility audits remain review limits, not established P0/P1 vulnerabilities.
-- Performance evidence includes bundle sizes and browser operation; a publication-quality 60fps benchmark across all laptops is not claimed. Cross-region Postgres round trips affect operational latency.
-- Account deletion retains disclosed immutable provenance and hashed revocation records.
-- Milestones share coherent implementation commits. Per-milestone historical starts were not all captured contemporaneously; execution documents identify retrospective Git baselines rather than inventing chronology.
-- Trademark/domain clearance is explicitly outside this build.
+At least one real failure/recovery demonstration must also leave custody unchanged.
 
-## T — ChatGPT review prompt
-«Review the Willie M0–M16 implementation independently. Do not trust milestone labels without checking evidence. Verify repository state, commits, architecture, tests, CI, migrations, Twitch integration, EventSub semantics, concurrency guarantees, security, external-adapter honesty, M9 hackathon readiness, visual coherence, accessibility, deployment and every stated blocker. Return P0, P1 and P2 findings. For every finding provide evidence and an exact repair recommendation.»
+## Persistent backend / database commissioning
+
+### Vercel preview — LOCAL_ACCEPTED
+
+The Willie project uses the repository Dockerfile through Vercel Services/container routing. A winner preview built the actual container image, then:
+
+- `/health` returned the Fastify Willie service;
+- `/ready` confirmed database connectivity/migrations for that preview;
+- the root served the winner React experience from the same process;
+- a stable winner preview alias is configured for same-origin CSRF/OAuth testing.
+
+Preview and production database targets are separated.
+
+### Neon preview schema — LOCAL_ACCEPTED
+
+A fresh Willie-only Neon branch was cloned from production and migrations 5–9 were applied successfully. It reports migrations 1–9. An older stale acceptance branch was rejected rather than force-migrated over schema drift.
+
+### Production schema — EXTERNAL_ACCEPTANCE_PENDING
+
+Production Willie remains at migrations 1–4. The exact winner migration has been validated on the fresh child branch, but Neon requires explicit user approval before applying the production migration. Production is intentionally not promoted while this gate is pending.
+
+## Winner experience
+
+- Relay — CONTRACT_TESTED
+- Living Willie V2 — LOCAL_ACCEPTED
+- Permanent Marks — CONTRACT_TESTED
+- Mutation Vote — CONTRACT_TESTED
+- Next Stop Vote — CONTRACT_TESTED
+- Passport Chapters — CONTRACT_TESTED
+- Clip Memory — CONTRACT_TESTED
+- Watch Willie — LOCAL_ACCEPTED
+- Community Legacy — CONTRACT_TESTED
+- Stage Mode — LOCAL_ACCEPTED
+- Judge Mode V2 — LOCAL_ACCEPTED (`SIMULATED REPLAY`)
+
+## Security closeout
+
+The focused winner review covers Relay authority, voting, permanent marks, Passport Chapters, clip OAuth/URLs, public identifiers, parameterized SQL, React escaping, SSE boundaries, rate limits, CSRF/origin validation, OAuth fixed redirects, idempotency/concurrency and database/runtime isolation.
+
+No unresolved P0/P1 is established by the scoped review after documented repairs. This is not a guarantee that no undiscovered issue exists. See `docs/SECURITY_REVIEW.md`.
+
+Key invariants retained:
+
+- chat cannot transfer custody;
+- raid evidence cannot auto-transfer custody;
+- destination acceptance is required;
+- one owner per version;
+- duplicate/stale evidence cannot recommit;
+- permanent marks and chapters cannot duplicate under replay;
+- clip failure cannot roll back or block custody;
+- provider gaps pause rather than guess;
+- secrets are redacted/encrypted and not exposed in public story responses.
+
+## Codex evidence
+
+Codex's genuine M0–M16 contribution is preserved in `docs/BUILT_WITH_CODEX.md`: architecture, authority state machine, deterministic hashing, Postgres/outbox, Twitch provider implementation, property tests, security/reliability reviews, race fixes, failure acceptance, SDK and cross-platform adapters.
+
+**HUMAN ACTION REQUIRED — CODEX SESSION ID**
+
+Open the primary Willie Codex thread, run `/status`, and copy the canonical session ID exactly. Do not substitute a ChatGPT conversation, Git commit or repository identifier.
+
+## Video
+
+- Narration: ready — `VIDEO_SCRIPT.md`
+- Recording order/required shots: ready — `VIDEO_SHOTLIST.md`
+- Runbook: ready — `DEMO_RUNBOOK.md`
+- Target duration: `2:58`; hard maximum `3:00`
+- Required real footage: source chat, two-broadcaster raid, EventSub arrival, Hold to Receive, preserved post-commit state; rejection/recovery where practical.
+- YouTube URL: **not yet available**.
+
+If real Twitch acceptance has not passed, the final video must not label CLI/Judge footage as live.
+
+## Devpost
+
+- Hackathon: Codex x TwitchCon Hackathon (`twitchcon-codex`)
+- Willie project: exists
+- Project state: draft
+- Public project URL: `https://devpost.com/software/willie`
+- Repository requirement: ready
+- Description/technology package: can be updated from this release
+- Final demo video: missing
+- Canonical Codex Session ID: missing
+- Submitter-specific country/survey/legal answers: must be supplied truthfully by the submitter
+- Submission state: **not submitted**
+
+`SUBMITTED` may only be used after Devpost explicitly confirms `Submitted`.
+
+## Final commercial future — documented, not built
+
+Creator Relay, Game Launch Relay, Charity Relay, Music Relay, Sports Relay, Brand Relay and TwitchCon Relay remain future concepts. The shared business mechanic is one campaign object traveling through multiple creators; every community changes it; each transition produces memory/content; the final artifact represents the complete campaign.
+
+No future concept may delay the Twitch flagship, video or submission.
+
+## Unavoidable human/external actions remaining
+
+1. Approve the already-validated Willie production migrations 5–9 before production promotion.
+2. Configure the Willie Twitch application/client credentials directly in Vercel secrets; never paste the client secret into chat.
+3. Authenticate two broadcaster accounts, start the required broadcasts, and perform the genuine Twitch raid/receive flow.
+4. Retrieve the canonical Codex Session ID from `/status` in the main Codex thread.
+5. Record/upload the final ≤3:00 public YouTube demo after real acceptance.
+6. Supply the Devpost submitter-specific country, self-report and legal-attestation answers.
+
+Everything else should be automated or executed through the connected tools.
+
+## Current release verdict
+
+**ENGINEERING_READY**
+
+Meaning: the Winner Release engineering, simulator/provider contracts, official Twitch CLI raid path, persistent container preview, isolated v9 preview database and presentation/submission package are in place. This does **not** mean `TWITCH_LIVE_ACCEPTED`, `SUBMISSION_READY` or `SUBMITTED`.
