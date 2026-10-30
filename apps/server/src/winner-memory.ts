@@ -256,12 +256,10 @@ export function registerWinnerMemoryRoutes(
       );
       const chapterRow = row.rows[0] ?? fail('PASSPORT_CHAPTER_NOT_FOUND');
       if (chapterRow.creator_id !== actor) fail('CLIP_CREATOR_REQUIRED');
-      const existing = await client.query<{
-        status: string;
-        url: string | null;
-      }>('SELECT status,url FROM winner_clip_requests WHERE chapter_id=$1 FOR UPDATE', [
-        chapterRow.chapter_id,
-      ]);
+      const existing = await client.query<{status: string; url: string | null}>(
+        'SELECT status,url FROM winner_clip_requests WHERE chapter_id=$1 FOR UPDATE',
+        [chapterRow.chapter_id],
+      );
       if (existing.rows[0] && ['PENDING', 'AVAILABLE'].includes(existing.rows[0].status))
         return {
           status: existing.rows[0].status,
@@ -298,15 +296,7 @@ export function registerWinnerMemoryRoutes(
           `INSERT INTO winner_clip_requests(id,campaign_id,relay_id,chapter_id,broadcaster_id,status,requested_at,resolved_at,error_code)
            VALUES($1,$2,$3,$4,$5,'FAILED',$6,$6,$7)
            ON CONFLICT(chapter_id) DO UPDATE SET twitch_clip_id=NULL,status='FAILED',requested_at=excluded.requested_at,resolved_at=excluded.resolved_at,url=NULL,error_code=excluded.error_code`,
-          [
-            requestId,
-            id,
-            chapterRow.relay_id,
-            chapterRow.chapter_id,
-            actor,
-            requestedAt,
-            errorCode,
-          ],
+          [requestId, id, chapterRow.relay_id, chapterRow.chapter_id, actor, requestedAt, errorCode],
         );
         await client.query(
           "UPDATE passport_chapters SET clip_status='FAILED',clip_url=NULL WHERE id=$1",
@@ -401,12 +391,13 @@ export function registerWinnerMemoryRoutes(
         .object({data: z.array(z.object({url: z.string().url()}))})
         .parse(await response.json());
       if (body.data[0]) {
-        let clipUrl: string;
-        try {
-          clipUrl = safeTwitchClipUrl(body.data[0].url);
-        } catch {
-          fail('INVALID_TWITCH_CLIP_URL');
-        }
+        const clipUrl = (() => {
+          try {
+            return safeTwitchClipUrl(body.data[0].url);
+          } catch {
+            return fail('INVALID_TWITCH_CLIP_URL');
+          }
+        })();
         memory = availableClipMemory(memory, clipUrl, Date.now());
         await db().query(
           "UPDATE winner_clip_requests SET status='AVAILABLE',resolved_at=$2,url=$3,error_code=NULL WHERE id=$1",
