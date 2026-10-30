@@ -49,7 +49,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          pnpm test > .ci-results/unit.txt 2>&1
+          pnpm test:unit > .ci-results/unit.txt 2>&1
           status=$?
           echo $status > .ci-results/unit.exit
           cat .ci-results/unit.txt
