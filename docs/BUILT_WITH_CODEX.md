@@ -4,16 +4,9 @@
 
 Codex was the primary implementation/review environment for the substantial M0–M16 foundation. M17–M28 winner-release continuation was completed in normal ChatGPT after the prior Codex session became unavailable.
 
-**HUMAN ACTION REQUIRED — CODEX SESSION ID**
+**Canonical Codex Session ID:** `01a171fa-0ed6-750c-8ed5-4ac1c6eab04b`
 
-The canonical Codex Session ID is not available through this conversation or repository metadata and must never be invented.
-
-1. Open the main Codex project thread used for most of Willie.
-2. Run `/status`.
-3. Copy the canonical session ID exactly.
-4. Put that exact value into the Devpost `Codex Session ID` field.
-
-Do not substitute a Git commit, ChatGPT conversation ID, repository ID or another identifier.
+This ID was supplied from the primary Willie Codex thread and is the identifier to use in the Devpost `Codex Session ID` field. Do not substitute a Git commit, ChatGPT conversation ID, repository ID or another identifier.
 
 ## Genuine Codex contribution — M0–M16
 
