@@ -41,9 +41,9 @@ Do not infer or fabricate the submitter's legal attestations, country selection 
 
 ## Codex field
 
-**HUMAN ACTION REQUIRED — CODEX SESSION ID**
+**Canonical Codex Session ID:** `01a171fa-0ed6-750c-8ed5-4ac1c6eab04b`
 
-Open the main Willie Codex thread, run `/status`, and copy the canonical session ID exactly. Do not substitute a ChatGPT ID, repository ID or commit SHA.
+Use this exact value for Devpost field `29289`. It was supplied from the primary Willie Codex thread and must not be replaced by a Git commit, ChatGPT conversation ID, repository ID or other identifier.
 
 ## Video field
 
