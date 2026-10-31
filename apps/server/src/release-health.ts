@@ -14,7 +14,7 @@ export function registerReleaseHealth(app:FastifyInstance,databaseUrl?:string):v
    const version=migration.rows[0]?.version??0,required=['relays','passport_chapters','community_marks','relay_votes','winner_clip_requests'];
    const existing=new Set(tables.rows.map(row=>row.name).filter(Boolean));
    const missing=required.filter(name=>!existing.has(name));
-   const twitch=Boolean(process.env.TWITCH_CLIENT_ID&&process.env.TWITCH_CLIENT_SECRET);
+   const twitch=Boolean(process.env.TWITCH_CLIENT_ID&&process.env.TWITCH_CLIENT_SECRET&&process.env.TWITCH_WEBHOOK_SECRET);
    const appUrl=Boolean(process.env.APP_URL);
    if(version<9||missing.length)return reply.code(503).send({status:'not_ready',database:true,migrations:false,migrationVersion:version,missing,twitch,appUrl});
    return{status:'ready',database:true,migrations:true,migrationVersion:version,twitch,appUrl};
