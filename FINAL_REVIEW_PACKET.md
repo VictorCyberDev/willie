@@ -64,7 +64,7 @@ This file is the single authoritative milestone/status record. Historical milest
 | M25 — Community Legacy | CONTRACT_TESTED | `f0d20a1f…` | authoritative chapter-derived legacy artifact + URL/test coverage | None | Real chapter content awaits M26 live run. |
 | M26 — Twitch commissioning | CLI_ACCEPTED | `1421b5fa…`, persistent runtime `6b3d2667…` | official Twitch CLI raid; container health/readiness; OAuth/EventSub contracts | No real two-account raid yet | Production DB migration approval + Twitch client credentials + two broadcaster logins/streams/real raid are required. |
 | M27 — Native Twitch enrichment | CONTRACT_TESTED | inherited M10/M13 provider paths | Shared Chat/Bits/Hype contracts | None | Per scope, real enrichment is attempted only after M26 real raid acceptance and only where account eligibility allows. |
-| M28 — Winner presentation + submission | EXTERNAL_ACCEPTANCE_PENDING | script/shotlist/runbook/Devpost draft | submission requirements verified; project draft exists | No final video/submission confirmation | Canonical Codex Session ID, real footage/YouTube URL, submitter questionnaire/legal answers, and final Devpost submit remain. |
+| M28 — Winner presentation + submission | EXTERNAL_ACCEPTANCE_PENDING | script/shotlist/runbook/Devpost draft | submission requirements verified; project draft exists; Codex Session ID recorded | No final video/submission confirmation | Real footage/YouTube URL, submitter questionnaire/legal answers, and final Devpost submit remain. |
 
 ## Test acceptance
 
@@ -177,9 +177,9 @@ Key invariants retained:
 
 Codex's genuine M0–M16 contribution is preserved in `docs/BUILT_WITH_CODEX.md`: architecture, authority state machine, deterministic hashing, Postgres/outbox, Twitch provider implementation, property tests, security/reliability reviews, race fixes, failure acceptance, SDK and cross-platform adapters.
 
-**HUMAN ACTION REQUIRED — CODEX SESSION ID**
+**Canonical Codex Session ID:** `01a171fa-0ed6-750c-8ed5-4ac1c6eab04b`
 
-Open the primary Willie Codex thread, run `/status`, and copy the canonical session ID exactly. Do not substitute a ChatGPT conversation, Git commit or repository identifier.
+This is the exact identifier supplied from the primary Willie Codex thread and is the value to use in Devpost field `29289`.
 
 ## Video
 
@@ -201,7 +201,7 @@ If real Twitch acceptance has not passed, the final video must not label CLI/Jud
 - Repository requirement: ready
 - Description/technology package: can be updated from this release
 - Final demo video: missing
-- Canonical Codex Session ID: missing
+- Canonical Codex Session ID: `01a171fa-0ed6-750c-8ed5-4ac1c6eab04b` — ready
 - Submitter-specific country/survey/legal answers: must be supplied truthfully by the submitter
 - Submission state: **not submitted**
 
@@ -218,9 +218,8 @@ No future concept may delay the Twitch flagship, video or submission.
 1. Approve the already-validated Willie production migrations 5–9 before production promotion.
 2. Configure the Willie Twitch application/client credentials directly in Vercel secrets; never paste the client secret into chat.
 3. Authenticate two broadcaster accounts, start the required broadcasts, and perform the genuine Twitch raid/receive flow.
-4. Retrieve the canonical Codex Session ID from `/status` in the main Codex thread.
-5. Record/upload the final ≤3:00 public YouTube demo after real acceptance.
-6. Supply the Devpost submitter-specific country, self-report and legal-attestation answers.
+4. Record/upload the final ≤3:00 public YouTube demo after real acceptance.
+5. Supply the Devpost submitter-specific country, self-report and legal-attestation answers.
 
 Everything else should be automated or executed through the connected tools.
 
