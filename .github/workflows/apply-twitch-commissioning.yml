@@ -1,0 +1,61 @@
+name: Apply Twitch commissioning patch
+
+on:
+  push:
+    branches:
+      - integration/willie-winner-release
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@v4
+        with:
+          ref: integration/willie-winner-release
+          fetch-depth: 0
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+          run_install: false
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply tested Twitch patch
+        run: python scripts/apply-twitch-commissioning.py
+
+      - name: Acceptance gates
+        run: |
+          pnpm typecheck
+          pnpm lint
+          pnpm test:unit
+          pnpm test:contracts
+          pnpm test:property
+          pnpm build
+          git diff --check
+
+      - name: Remove one-shot patch machinery
+        run: |
+          rm -f scripts/apply-twitch-commissioning.py
+          rm -f .github/workflows/apply-twitch-commissioning.yml
+
+      - name: Commit and push winner release checkpoint
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --check
+          git commit -m "fix: commission Twitch OAuth and EventSub webhooks"
+          git push origin HEAD:integration/willie-winner-release
