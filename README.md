@@ -1,12 +1,53 @@
 # Willie
 
-**One live thing. Many communities. One continuing story.**
+**A raid shouldn't reset the story.**
 
-Willie is a persistent social object that Twitch communities shape together and safely pass between live streams.
+Willie is a persistent social object that Twitch communities shape together, safely pass between live streams, and inherit without resetting.
 
 **Twitch moves audiences. Willie gives them something worth following.**
 
-[Watch the winner experience](https://willie-winner-release-start-up16.vercel.app/) · [Judge Mode V2](https://willie-winner-release-start-up16.vercel.app/judge-v2) · [Final review packet](FINAL_REVIEW_PACKET.md)
+## Judge Willie in 90 seconds
+
+- **Live product:** https://willie-phi.vercel.app
+- **Demo video:** https://youtu.be/6O7GZceaUxU
+- **Judge Mode V2:** https://willie-phi.vercel.app/judge-v2
+- **Stage Mode:** https://willie-phi.vercel.app/stage
+- **Source:** https://github.com/VictorCyberDev/willie
+
+The core loop is simple:
+
+1. A community shapes Willie through bounded participation.
+2. The creator approves the next destination.
+3. Twitch provides matching raid evidence.
+4. Willie does **not** transfer automatically.
+5. The destination creator must explicitly **Hold to Receive**.
+6. Custody commits exactly once.
+7. Marks, Relay progress, Passport Chapters, Receipts and provenance survive into the next community.
+
+**Most Twitch tools make one stream more interactive. Willie makes continuity between streams the interaction.**
+
+> **Follow the object, not only the creator.**
+
+The authority chain is:
+
+**COMMUNITY INFLUENCES → CREATOR AUTHORIZES → DESTINATION PREPARES → TWITCH PROVIDES EVIDENCE → DESTINATION ACCEPTS → ENGINE COMMITS**
+
+## Why Willie is different
+
+A raid already moves people between creators. Willie turns that transition into a persistent social mechanic.
+
+Instead of resetting at the channel boundary, the same shared object keeps travelling. Viewers can encounter Willie again later, recognize the history previous communities left behind, and continue the same Relay.
+
+This opens the door to formats such as:
+
+- creator relays;
+- charity journeys;
+- game-launch relays;
+- community quests;
+- convention/event journeys;
+- collaborative campaigns where every community permanently changes the same artifact.
+
+The product is not a poll, chatbot or cosmetic overlay. The product is the persistent object and the trusted handoff between communities.
 
 ## What Willie does
 
@@ -14,9 +55,17 @@ Chat changes Willie. Community moments transform it. A creator chooses where Wil
 
 Nothing resets: identity, Relay mission, progress, permanent community marks, Passport Chapters, Receipts and provenance continue into the next community.
 
-The authority chain is:
+## Winner experience
 
-**COMMUNITY INFLUENCES → CREATOR AUTHORIZES → DESTINATION PREPARES → TWITCH PROVIDES EVIDENCE → DESTINATION ACCEPTS → ENGINE COMMITS**
+- **Living Willie V2** — a visual object whose state changes with the community.
+- **Willie Relay** — one shared mission spanning multiple Twitch communities.
+- **Permanent Community Marks** — durable marks with provenance from each community.
+- **Community Decision Rituals** — viewers influence the next chapter while creators retain control.
+- **Passport Chapters** — every accepted handoff becomes part of Willie's history.
+- **Watch Willie** — follow the current community, Relay and journey.
+- **Stage Mode** — a room-scale presentation surface for live viewing.
+- **Community Legacy** — a shareable artifact of what one community contributed.
+- **Judge Mode V2** — a clearly labelled simulated replay for inspecting the full lifecycle without confusing simulation with provider evidence.
 
 ## Winner routes
 
@@ -30,11 +79,89 @@ The authority chain is:
 - `/ready` — database/provider readiness.
 - `/release-ready` — Winner Release schema/runtime gate (requires migrations through v9).
 
+## Built with Twitch
+
+Willie connects to Twitch through:
+
+- Twitch OAuth for creator identity and authorization;
+- Twitch EventSub for provider events;
+- Twitch chat participation for bounded community influence;
+- `channel.raid` evidence for handoff verification;
+- OBS-friendly presentation surfaces for live streams.
+
+The official Twitch CLI acceptance harness exercises the real Willie transport/parser path for `channel.raid` events. That evidence is labelled **CLI_ACCEPTED** and is not represented as a live broadcaster run.
+
+## Built with OpenAI Codex
+
+OpenAI Codex was central to the engineering foundation, not just used for snippets.
+
+Codex helped design and implement:
+
+- the deterministic custody state machine;
+- PostgreSQL authority and outbox persistence;
+- Twitch provider integration;
+- replay and duplicate protection;
+- concurrency and race-condition repairs;
+- property-based testing;
+- failure/restart acceptance;
+- security review;
+- SDK and adapter contracts.
+
+We also used Codex adversarially: it helped run **10,000 randomized authority sequences**, investigate failure modes, surface race conditions and verify the resulting fixes.
+
+Canonical Codex Session ID: `01a171fa-0ed6-750c-8ed5-4ac1c6eab04b`
+
+## Safety and authority
+
+A cross-community object is only interesting if normal social activity cannot hijack it.
+
+Willie's invariants include:
+
+- chat cannot transfer custody;
+- a raid cannot automatically transfer custody;
+- destination acceptance is mandatory;
+- duplicate or stale evidence cannot recommit custody;
+- exactly one authoritative owner exists per version;
+- provider gaps pause rather than guess;
+- permanent marks and Passport Chapters are replay-safe;
+- successful handoffs produce durable Receipts.
+
+## Engineering proof
+
+The Winner Release on `main` is covered by acceptance checks for:
+
+- lint and TypeScript typecheck;
+- unit tests;
+- 10,000-sequence property tests;
+- PostgreSQL integration and concurrency tests;
+- Twitch/provider contract tests;
+- browser E2E;
+- failure and restart acceptance;
+- production build;
+- Docker build.
+
+The production Willie runtime exposes health/readiness gates and is migrated through database version 9.
+
 ## Runtime
 
-The Winner Release uses a persistent Vercel container service built from the repository `Dockerfile`. The same Fastify process serves the built React frontend, OAuth/API routes, SSE, database authority and Twitch EventSub worker lifecycle. Preview and production database targets are isolated; the winner preview uses a fresh Willie-only Neon branch cloned from production and migrated through schema version 9.
+The Winner Release uses a persistent Vercel container service built from the repository `Dockerfile`. The same Fastify process serves the built React frontend, OAuth/API routes, SSE, database authority and Twitch EventSub worker lifecycle. Preview and production database targets are isolated.
 
-The canonical production origin is `https://willie-phi.vercel.app`. Production promotion is gated on production migrations, Twitch application credentials, real two-broadcaster acceptance and final release review. Until that gate passes, the stable winner preview above is the engineering acceptance surface.
+The canonical production origin is:
+
+**https://willie-phi.vercel.app**
+
+Real broadcaster commissioning requires a configured Twitch application and broadcaster OAuth. Until genuine external Twitch behavior is observed, Willie keeps the evidence boundary explicit rather than claiming `LIVE_ACCEPTED`.
+
+## Real vs simulated evidence
+
+Willie deliberately separates provider evidence from simulation:
+
+- **LIVE_ACCEPTED** — reserved for genuine external Twitch behavior.
+- **CLI_ACCEPTED** — Twitch CLI EventSub evidence exercised through the real transport/parser path.
+- **CONTRACT-TESTED** — provider behavior verified in automated contracts.
+- **SIMULATED REPLAY** — Judge Mode lifecycle replay.
+
+Judge Mode visibly identifies itself as simulated. No provider is described as live without genuine external behavior.
 
 ## Run locally
 
@@ -83,5 +210,12 @@ Integration tests require an isolated `TEST_DATABASE_URL`. The failure script cr
 - [Demo runbook](DEMO_RUNBOOK.md)
 - [Video script](VIDEO_SCRIPT.md)
 - [Devpost checklist](DEVPOST_CHECKLIST.md)
+- [Final review packet](FINAL_REVIEW_PACKET.md)
 
-No provider is `LIVE_ACCEPTED` without genuine external behavior. The authoritative M0–M28 status, blockers and checkpoint commits live only in [FINAL_REVIEW_PACKET.md](FINAL_REVIEW_PACKET.md).
+---
+
+## The idea
+
+**A raid shouldn't reset the story.**
+
+**One live thing. Many communities. One continuing story.**
