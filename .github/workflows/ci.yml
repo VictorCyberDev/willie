@@ -1,5 +1,8 @@
 name: Willie acceptance
 on: [push, pull_request]
+concurrency:
+  group: willie-acceptance-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   acceptance:
     runs-on: ubuntu-latest
@@ -19,8 +22,134 @@ jobs:
         with: {node-version: 24, cache: pnpm}
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm migrate && pnpm seed
-      - run: pnpm lint && pnpm typecheck && pnpm test && pnpm test:property && pnpm test:integration && pnpm test:contracts && pnpm build && pnpm test:e2e && pnpm test:m9 && pnpm test:failure && pnpm docker:build
+      - name: Migrate and seed
+        run: pnpm migrate && pnpm seed
+      - name: Lint
+        shell: bash
+        run: |
+          mkdir -p .ci-results
+          set +e
+          pnpm exec eslint . --max-warnings=0 -f json > .ci-results/lint.json
+          status=$?
+          echo $status > .ci-results/lint.exit
+          set -e
+          exit $status
+      - name: Typecheck
+        shell: bash
+        run: |
+          set +e
+          pnpm typecheck > .ci-results/typecheck.txt 2>&1
+          status=$?
+          echo $status > .ci-results/typecheck.exit
+          cat .ci-results/typecheck.txt
+          set -e
+          exit $status
+      - name: Unit tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:unit > .ci-results/unit.txt 2>&1
+          status=$?
+          echo $status > .ci-results/unit.exit
+          cat .ci-results/unit.txt
+          exit $status
+      - name: Property tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:property > .ci-results/property.txt 2>&1
+          status=$?
+          echo $status > .ci-results/property.exit
+          cat .ci-results/property.txt
+          exit $status
+      - name: Integration tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:integration > .ci-results/integration.txt 2>&1
+          status=$?
+          echo $status > .ci-results/integration.exit
+          cat .ci-results/integration.txt
+          exit $status
+      - name: Contract tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:contracts > .ci-results/contracts.txt 2>&1
+          status=$?
+          echo $status > .ci-results/contracts.exit
+          cat .ci-results/contracts.txt
+          exit $status
+      - name: Build
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm build > .ci-results/build.txt 2>&1
+          status=$?
+          echo $status > .ci-results/build.exit
+          cat .ci-results/build.txt
+          exit $status
+      - name: Browser E2E
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:e2e > .ci-results/e2e.txt 2>&1
+          status=$?
+          echo $status > .ci-results/e2e.exit
+          cat .ci-results/e2e.txt
+          exit $status
+      - name: M9 acceptance
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:m9 > .ci-results/m9.txt 2>&1
+          status=$?
+          echo $status > .ci-results/m9.exit
+          cat .ci-results/m9.txt
+          exit $status
+      - name: Failure and restart acceptance
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test:failure > .ci-results/failure.txt 2>&1
+          status=$?
+          echo $status > .ci-results/failure.exit
+          cat .ci-results/failure.txt
+          exit $status
+      - name: Docker build
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm docker:build > .ci-results/docker.txt 2>&1
+          status=$?
+          echo $status > .ci-results/docker.exit
+          cat .ci-results/docker.txt
+          exit $status
       - uses: actions/upload-artifact@v4
         if: always()
-        with: {name: browser-evidence, path: test-results}
+        with:
+          name: browser-evidence
+          include-hidden-files: true
+          path: |
+            test-results
+            .ci-results
+      - name: Enforce acceptance gates
+        if: always()
+        shell: bash
+        run: |
+          failed=0
+          for gate in lint typecheck unit property integration contracts build e2e m9 failure docker; do
+            status=$(cat ".ci-results/$gate.exit" 2>/dev/null || echo 1)
+            echo "$gate=$status"
+            if [ "$status" != "0" ]; then failed=1; fi
+          done
+          exit $failed
